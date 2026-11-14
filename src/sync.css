@@ -1,0 +1,20 @@
+/* ===== stage 11: синхронизация ===== */
+.ap-sync .ap-h3{margin:0 0 6px}
+.ap-syacc{margin:6px 0 0;font-weight:700;overflow-wrap:anywhere}
+.ap-systat{margin:4px 0 0;min-height:1.4em;font-size:14px;color:var(--mute);font-weight:600}
+.ap-syb{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.ap-syb svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linejoin:round}
+.ap-sync .hint{margin:10px 0 0}
+.ap-hsync{position:relative}
+.ap-hsync .ap-sok,.ap-hsync .ap-sbz,.ap-hsync .ap-sx{display:none}
+.ap-sy-ok .ap-sok{display:inline;stroke:var(--accent)}
+.ap-sy-busy .ap-sbz{display:inline;stroke:var(--accent)}
+.ap-sy-busy svg{animation:apSpin 1.4s linear infinite}
+.ap-sy-off .ap-sx,.ap-sy-err .ap-sx,.ap-sy-auth .ap-sx{display:inline}
+.ap-sdot{position:absolute;top:5px;right:5px;width:8px;height:8px;border-radius:50%;background:transparent}
+.ap-sy-off .ap-sdot{background:var(--mute)}
+.ap-sy-err .ap-sdot,.ap-sy-auth .ap-sdot{background:#c0392b}
+:root[data-theme=dark] .ap-sy-err .ap-sdot,:root[data-theme=dark] .ap-sy-auth .ap-sdot{background:#f0a197}
+@keyframes apSpin{to{transform:rotate(360deg)}}
+@media (max-width:360px){.ap-hstat{gap:4px}.ap-hstat .ap-ib{width:34px;height:34px}}
+@media print{.ap-hsync,.ap-sync{display:none!important}}

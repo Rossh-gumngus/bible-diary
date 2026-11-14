@@ -1,0 +1,11 @@
+/* ===== stage 10: шрифты =====
+   Все три шрифта — SIL Open Font License 1.1 (Unbounded, Manrope, Lora).
+   Сейчас они подключаются ссылкой Google Fonts (см. FONT_LINK в build10.py).
+   Для GitHub: положите woff2-файлы в s10/fonts/ и соберите с FONT_MODE=embed —
+   build10.py встроит @font-face (base64) сюда и уберёт ссылку. Интерфейс
+   обращается к шрифтам только через три токена ниже, поэтому замена шрифта
+   правит одно место. */
+:root{
+ --f-ui:"Manrope",system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+ --f-disp:"Unbounded","Manrope",system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;
+ --f-serif:"Lora",Georgia,"Times New Roman",serif}

@@ -1,0 +1,190 @@
+<svg class="ap-defs" width="0" height="0" aria-hidden="true" focusable="false"><defs><linearGradient id="apG" x1="0" y1="0" x2="1" y2="1"><stop offset="0" class="ap-g1"/><stop offset=".55" class="ap-g2"/><stop offset="1" class="ap-g3"/></linearGradient><linearGradient id="apGV" x1="0" y1="1" x2="0" y2="0"><stop offset="0" class="ap-g1"/><stop offset="1" class="ap-g3"/></linearGradient></defs></svg>
+<div class="ap-shell" id="shell">
+<header class="ap-hdr" id="hdr">
+  <div class="ap-hin">
+    <div class="ap-brand"><div class="ap-title">Дневник чтения Библии</div></div>
+    <div class="ap-hstat">
+      <span class="ap-streak" id="hStreak" title="Дней подряд с записями" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3c.6 3.2 4.8 5 4.8 10a4.8 4.8 0 0 1-9.6 0c0-2.6 1.4-3.8 2-6 .9.8 1.6 1.9 1.9 3.2C12.6 8 12.4 5.5 12 3z"/></svg><span id="hStreakT"></span></span>
+      <button class="ap-hgoal" id="hGoal" type="button" hidden><svg class="ap-mring" viewBox="0 0 36 36" aria-hidden="true"><circle class="ap-rbg" cx="18" cy="18" r="14"/><circle class="ap-rfg" id="hGoalC" cx="18" cy="18" r="14"/><circle class="ap-rbg" id="hGoalB2" cx="18" cy="18" r="8"/><circle class="ap-rfg" id="hGoalC2" cx="18" cy="18" r="8"/></svg><span id="hGoalT"></span></button>
+      <button class="ap-ib ap-hsync" id="hSync" type="button" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path class="ap-scl" d="M7 18.5h10.5a4 4 0 0 0 .6-7.95A6 6 0 0 0 6.5 9.6 4.5 4.5 0 0 0 7 18.5z"/><path class="ap-sok" d="M9.5 13.6l2 2 3.8-4"/><path class="ap-sbz" d="M9 13.5a3 3 0 0 1 5.2-2M15 13.5a3 3 0 0 1-5.2 2M14.2 9.6v1.9h-1.9M9.8 17.4v-1.9h1.9"/><path class="ap-sx" d="M10 11.5l4 4M14 11.5l-4 4"/></svg><span class="ap-sdot" aria-hidden="true"></span></button>
+      <button class="ap-ib" id="themeBtn" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><g id="thIco"></g></svg></button>
+    </div>
+  </div>
+</header>
+<nav class="ap-nav" id="nav" role="tablist" aria-label="Разделы" aria-orientation="horizontal">
+  <div class="ap-navbrand" aria-hidden="true"><span class="ap-logo"><svg viewBox="0 0 24 24"><circle cx="17" cy="7" r="2.6"/><path d="M17 1.8v1.1M21.4 7h1.1M20.2 3.8l.8-.8M3 12.5c3-1.5 6-1.5 9 0v8c-3-1.5-6-1.5-9 0zM12 12.5c3-1.5 6-1.5 9 0v8c-3-1.5-6-1.5-9 0z"/></svg></span><span>Дневник чтения<br>Библии</span></div>
+  <button role="tab" id="tabW" aria-controls="pW" aria-selected="true"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 5.5c3-1.5 6-1.5 9 0v14c-3-1.5-6-1.5-9 0zM12 5.5c3-1.5 6-1.5 9 0v14c-3-1.5-6-1.5-9 0z"/></svg><span>Читать</span></button>
+  <button role="tab" id="tabL" aria-controls="pL" aria-selected="false" tabindex="-1"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6h11M9 12h11M9 18h11M4.5 6h.01M4.5 12h.01M4.5 18h.01"/></svg><span>Записи</span></button>
+  <button role="tab" id="tabP" aria-controls="pP" aria-selected="false" tabindex="-1"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20V11M10 20V5M16 20v-7M2 20h20"/></svg><span>Прогресс</span></button>
+  <button role="tab" id="tabY" aria-controls="pY" aria-selected="false" tabindex="-1"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h12v18l-6-4.5L6 21z"/></svg><span>Книга года</span></button>
+  <span class="ap-ind" id="navInd" aria-hidden="true"></span>
+</nav>
+<main class="ap-main" id="main">
+  <section id="pW" class="ap-panel" role="tabpanel" aria-labelledby="tabW">
+    <div class="gcard ap-hero" id="gCard" role="button" tabindex="0" aria-label="Минуты в день: открыть «Прогресс»" hidden>
+      <svg class="ap-illu" viewBox="0 0 240 170" aria-hidden="true"><circle cx="170" cy="62" r="24"/><circle cx="170" cy="62" r="34" stroke-dasharray="2 5"/><g><path d="M212.0 62.0L226.0 62.0"/><path d="M206.4 83.0L218.5 90.0"/><path d="M191.0 98.4L198.0 110.5"/><path d="M170.0 104.0L170.0 118.0"/><path d="M149.0 98.4L142.0 110.5"/><path d="M133.6 83.0L121.5 90.0"/><path d="M128.0 62.0L114.0 62.0"/><path d="M133.6 41.0L121.5 34.0"/><path d="M149.0 25.6L142.0 13.5"/><path d="M170.0 20.0L170.0 6.0"/><path d="M191.0 25.6L198.0 13.5"/><path d="M206.4 41.0L218.5 34.0"/></g><path class="ap-ilb" d="M40 150c22-12 48-12 70 0 22-12 48-12 70 0V110c-22-12-48-12-70 0-22-12-48-12-70 0z"/><path d="M110 110v40M52 118c16-6 32-6 48 0M52 128c16-6 32-6 48 0M120 118c16-6 32-6 48 0M120 128c16-6 32-6 48 0"/><g class="ap-ils"><circle cx="40" cy="30" r="1.6"/><circle cx="72" cy="52" r="1.1"/><circle cx="102" cy="22" r="1.4"/><circle cx="220" cy="128" r="1.2"/></g></svg>
+      <div class="ap-hring" aria-hidden="true"><svg viewBox="0 0 100 100"><circle class="ap-hbg" cx="50" cy="50" r="43"/><circle class="ap-hfg" id="gcR" cx="50" cy="50" r="43"/></svg><div class="ap-hrv"><b id="gcV">0</b><span id="gcU"></span></div></div>
+      <div class="ap-hbody">
+      <div class="gch"><span id="gcT"></span><span class="gcgo">Прогресс ›</span></div>
+      <div class="gcb" id="gcB" role="progressbar" aria-valuemin="0" aria-valuemax="100"><div id="gcF"></div><span id="gcM" hidden></span></div>
+      <div class="gcn" id="gcN"></div><div class="gcs" id="gcS"></div>
+      </div>
+    </div>
+    <div id="planW" hidden></div>
+    <div class="ap-card ap-timer">
+      <div class="ap-tl1"><span class="ap-lbl">Таймер чтения</span><span class="ap-clk" id="clk">00:00:00</span></div>
+      <div class="ap-tbtns"><button class="btn ap-pri" type="button" id="tStart" data-tstart>Старт</button><button class="btn" type="button" id="tReset">Сбросить</button><button class="btn" type="button" id="focusBtn">Режим чтения</button></div>
+    </div>
+    <button class="ap-cta" type="button" id="newBtn"><span aria-hidden="true">+</span> Новая запись</button>
+    <h2 class="ap-h2 ap-rh"><svg class="ap-leaf" viewBox="0 0 32 32" aria-hidden="true"><path d="M6 26C6 14 14 6 26 6c0 12-8 20-20 20zM6 26L19 13"/></svg>Последние записи</h2>
+    <div id="recent"></div>
+  </section>
+
+  <section id="pL" class="ap-panel" role="tabpanel" aria-labelledby="tabL" hidden>
+    <div class="ap-ltools" role="search">
+      <input type="search" id="q" placeholder="Поиск по мысли, заметке, темам, отрывкам" aria-label="Поиск">
+      <button type="button" class="btn ap-fbtn" id="fltBtn" aria-haspopup="dialog"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 5h18l-7 8v6l-4-2v-4z"/></svg><span>Фильтры</span><span class="ap-badge" id="fltN" hidden></span></button>
+    </div>
+    <div class="ap-vrow">
+      <div class="ap-views" role="radiogroup" aria-label="Вид списка">
+        <button type="button" role="radio" data-view="cards" aria-checked="true">Карточки</button><button type="button" role="radio" data-view="compact" aria-checked="false" tabindex="-1">Список</button><button type="button" role="radio" data-view="timeline" aria-checked="false" tabindex="-1">Лента</button>
+      </div>
+      <span class="found" id="found" aria-live="polite"></span>
+    </div>
+    <div class="ap-achips" id="aChips"></div>
+    <div id="list"></div>
+    <div class="ap-sec ap-sync" id="syncBox">
+      <h3 class="ap-h3">Синхронизация с Google Диском</h3>
+      <p class="hint" id="syNote" hidden></p>
+      <p class="ap-syacc" id="syAcc" hidden></p>
+      <p class="ap-systat" id="syStat" aria-live="polite"></p>
+      <div class="ap-syb"><button type="button" class="btn main" id="syIn" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 18.5h10.5a4 4 0 0 0 .6-7.95A6 6 0 0 0 6.5 9.6 4.5 4.5 0 0 0 7 18.5z"/></svg>Войти через Google</button><button type="button" class="btn ap-pri" id="syNow" hidden>Синхронизировать сейчас</button><button type="button" class="btn" id="syOut" hidden>Выйти</button></div>
+      <p class="hint" id="syHint" hidden>Записи хранятся в скрытой папке приложения на вашем Google Диске; к остальным файлам Диска у дневника нет доступа. На каждом устройстве записи сливаются, ничего не стирается.</p>
+    </div>
+    <div class="backup ap-sec">
+      <p>Резервная копия: сохраните все записи в файл или загрузите из файла. Загрузка добавляет записи и не стирает существующие.</p>
+      <div class="row"><button class="btn" id="exp">Скачать копию</button><button class="btn" id="imp">Загрузить из файла</button><input type="file" id="file" accept=".json,application/json" hidden></div>
+      <div class="msg" id="bmsg" aria-live="polite"></div>
+    </div>
+    <div class="foot" id="sync"></div>
+  </section>
+
+  <section id="pP" class="ap-panel" role="tabpanel" aria-labelledby="tabP" hidden>
+    <div class="ap-sec">
+    <h2 class="ap-h2">Обзор</h2>
+    <div class="ap-rings" id="rings"></div>
+    </div>
+    <div class="ap-sec">
+    <h2 class="ap-h2">Карта прочитанного</h2>
+    <p class="hint">Плитка — книга: чем темнее, тем больше глав прочитано. Нажмите на плитку, чтобы увидеть главы.</p>
+    <div id="tiles"></div>
+    </div>
+    <div class="ap-sec">
+    <h2 class="ap-h2">Тепловая карта</h2>
+    <div class="calh"><button type="button" class="btn" id="heatPrev" aria-label="Предыдущий год">‹</button><strong id="heatT"></strong><button type="button" class="btn" id="heatNext" aria-label="Следующий год">›</button></div>
+    <div class="ap-heatw" id="heat"></div>
+    <div class="ap-heatleg" id="heatLeg"></div>
+    <p class="ap-heatinfo" id="heatInfo" aria-live="polite"></p>
+    </div>
+    <div class="ap-sec">
+    <h2 class="ap-h2">Календарь</h2>
+    <div class="calh"><button type="button" class="btn" id="calPrev" aria-label="Предыдущий месяц">‹</button><strong id="calT" aria-live="polite"></strong><button type="button" class="btn" id="calNext" aria-label="Следующий месяц">›</button></div>
+    <div class="cal" id="cal"></div>
+    <div id="calDay"></div>
+    </div>
+    <div class="ap-sec">
+    <h2 class="ap-h2" id="goalH">Цели</h2>
+    <div id="goalView"></div>
+    <div class="msg" id="gMsg" aria-live="polite"></div>
+    </div>
+    <div class="ap-sec">
+    <h2 class="ap-h2">Статистика времени</h2>
+    <div id="stats"></div>
+    </div>
+    <div class="ap-sec">
+    <h2 class="ap-h2">Достижения</h2>
+    <div class="ap-ach" id="ach"></div>
+  
+    </div>
+  </section>
+
+  <section id="pY" class="ap-panel" role="tabpanel" aria-labelledby="tabY" hidden>
+    <div class="ap-sec ap-ybc">
+    <div class="yb-ctl">
+      <div><label for="ybYear">Год</label><select id="ybYear"></select></div>
+      <button type="button" class="btn" id="ybPrint">Печать или PDF</button>
+      <button type="button" class="btn" id="ybDl">Скачать как HTML</button>
+    </div>
+    <p class="hint">Если окно печати не открывается (так бывает внутри окна артефакта), нажмите «Скачать как HTML», откройте файл в браузере и напечатайте оттуда. Чтобы получить PDF, выберите в окне печати «Сохранить как PDF».</p>
+    <div class="msg" id="ybMsg" aria-live="polite"></div>
+    </div>
+    <div class="yb-book" id="ybBook"></div>
+  </section>
+</main>
+<button class="ap-fab" id="fab" type="button" aria-label="Новая запись" title="Новая запись"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button>
+</div>
+<div class="ap-toasts" id="toasts" aria-live="polite"></div>
+<div id="ovRoot"></div>
+
+<div id="hold" hidden>
+  <div class="ap-form" id="fSheet">
+    <div class="ap-dh"><h2 class="ap-dt" id="fTitle">Новая запись</h2><button type="button" class="ap-x" data-close aria-label="Закрыть">×</button></div>
+    <div class="ap-db">
+      <div class="ap-trow"><span class="ap-clk" id="clk2">00:00:00</span><button class="btn sm" type="button" id="tStart2" data-tstart>Старт</button><button class="btn sm" type="button" id="focusBtn2">Режим чтения</button></div>
+      <div class="row wrapm">
+        <div><label for="fDate">Дата</label><input type="date" id="fDate"></div>
+        <div><label for="fMin">Минуты</label><input type="number" id="fMin" min="0" inputmode="numeric"></div>
+        <div><label for="fSec">Секунды</label><input type="number" id="fSec" min="0" max="59" inputmode="numeric"></div>
+      </div>
+      <label>Что прочитано</label>
+      <div class="chips" id="refs"></div>
+      <button type="button" class="btn ap-pick" id="pickBtn"><span aria-hidden="true">+</span> Выбрать отрывок</button>
+      <label for="fKey">Главная мысль или стих дня</label>
+      <input type="text" id="fKey">
+      <label for="fTag">Темы (Enter после каждой)</label>
+      <input type="text" id="fTag" list="tagList" placeholder="например: Padşahlıq">
+      <datalist id="tagList"></datalist>
+      <div class="chips" id="tags"></div>
+      <label for="fNote">Заметки</label>
+      <div class="tbar" id="tbar" role="toolbar" aria-label="Оформление заметки">
+        <button type="button" class="btn b" data-w="**" title="Жирный" aria-label="Жирный">Ж</button>
+        <button type="button" class="btn i" data-w="*" title="Курсив" aria-label="Курсив">К</button>
+        <button type="button" class="btn" data-p="> " title="Цитата">Цитата</button>
+        <button type="button" class="btn" data-p="- " title="Список">Список</button>
+        <button type="button" class="btn" id="insRef" title="Вставить ссылку на отрывок">Отрывок</button>
+      </div>
+      <textarea id="fNote"></textarea>
+      <div class="pv note" id="pv" hidden></div>
+      <button type="button" class="btn sm pvb" id="pvBtn" aria-pressed="false">Предпросмотр</button>
+      <div class="msg" id="msg" aria-live="polite"></div>
+    </div>
+    <div class="ap-df"><button type="button" class="btn" id="cancel">Отмена</button><button type="button" class="btn main" id="save">Сохранить запись</button></div>
+  </div>
+
+  <div class="ap-form" id="fltPanel">
+    <div class="ap-dh"><h2 class="ap-dt" id="fltTitle">Фильтры</h2><button type="button" class="ap-x" data-close aria-label="Закрыть">×</button></div>
+    <div class="ap-db">
+      <div class="fgrid">
+        <div><label for="qDate">Дата</label><input type="date" id="qDate"></div>
+        <div><label for="qTag">Тема</label><select id="qTag"></select></div>
+        <div><label for="qBook">Книга</label><select id="qBook"></select></div>
+        <div><label for="qCh">Глава</label><select id="qCh"></select></div>
+      </div>
+      <label class="ck"><input type="checkbox" id="qFav"> Только избранное</label>
+      <div class="fbot"><button type="button" class="btn sm" id="qReset">Сбросить фильтры</button><span class="found" id="found2"></span></div>
+      <hr class="ap-hr">
+      <h3 class="ap-h3">Управление темами</h3>
+      <div class="row ap-tmr"><select id="tmOld" aria-label="Тема"></select><input type="text" id="tmNew" placeholder="новое название" aria-label="Новое название"></div>
+      <div class="row ap-tmr"><button type="button" class="btn sm" id="tmRen">Переименовать</button><button type="button" class="btn sm" id="tmDel">Удалить тему</button></div>
+      <div class="msg" id="tmMsg" aria-live="polite"></div>
+    </div>
+    <div class="ap-df"><button type="button" class="btn main" data-close>Показать записи</button></div>
+  </div>
+
+  <div class="ap-focus" id="focusBox">
+    <div class="ap-fhead"><span class="ap-flbl" id="focusTitle">Режим чтения</span><button type="button" class="ap-x" id="fsExit" aria-label="Выйти из режима чтения">×</button></div>
+    <div class="ap-fclk" id="fsClk" role="timer" aria-live="off">00:00:00</div>
+    <div class="ap-fsub" id="fsSub"></div>
+    <div class="ap-fbtns"><button type="button" class="btn ap-big" id="fsStart" data-tstart>Старт</button><button type="button" class="btn ap-big main" id="fsDone">Завершить и записать</button></div>
+  </div>
+</div>
