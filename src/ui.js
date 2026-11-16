@@ -117,7 +117,9 @@ function renderDetail(){if(!det)return;var e=entries.find(function(x){return x.i
 
 /* --- passage picker --- */
 var BAL={};B.forEach(function(b){var v=[fold(b.n)],m=b.n.match(/^(Birinci|İkinci|Üçüncü|1|2|3) (.+)$/);if(m){var n=NUMW.indexOf(m[1])+1||+m[1];v=[fold(n+" "+m[2]),fold(NUMW[n-1]+" "+m[2]),fold(n+m[2])]}BAL[b.k]=v});
-function openPicker(o){var st={step:"b",b:null,c:0,rg:[],start:null},rd=readMap();
+function vsRanges(k,c,v){var mx=maxV(k,c);if(!v)return mx?[[1,mx]]:[];return String(v).split(",").map(function(p){var m=p.split("-"),a=+m[0],z=+(m[1]||m[0]);return [a,z]}).filter(function(r){return r[0]>=1&&r[1]>=r[0]})}
+function openPicker(o){var st={step:"b",b:null,c:0,rg:[],start:null,mc:false,cs:null,cr:null},rd=readMap();
+  if(o.init&&BK[o.init.b]){st.b=o.init.b;st.c=+o.init.c||1;st.step="v";st.rg=vsRanges(st.b,st.c,o.init.v)}
   var box=h("div","ap-pk"),hd=h("div","ap-dh"),t=h("h2","ap-dt",o.title||"Выбрать отрывок");t.id="pkT";hd.appendChild(t);var x=h("button","ap-x","×");x.type="button";x.setAttribute("aria-label","Закрыть");x.setAttribute("data-close","");hd.appendChild(x);box.appendChild(hd);
   var bd=h("div","ap-db");box.appendChild(bd);var ft=h("div","ap-df");box.appendChild(ft);
   var m=openModal(box,{variant:"sheet",label:"pkT"});
@@ -125,7 +127,9 @@ function openPicker(o){var st={step:"b",b:null,c:0,rg:[],start:null},rd=readMap(
     if(st.b){p.appendChild(h("span","","›"));var b=h("button","",BK[st.b].n);b.type="button";b.onclick=function(){st.step="c";draw()};p.appendChild(b)}
     if(st.step==="v"){p.appendChild(h("span","","›"));p.appendChild(h("span","",String(st.c)))}return p}
   function vtxt(){return st.rg.slice().sort(function(a,b){return a[0]-b[0]}).map(function(r){return r[0]===r[1]?String(r[0]):r[0]+"-"+r[1]}).join(",")}
-  function finish(v){var r={b:st.b,c:st.c,v:v||""},e=vsErr(r.b,r.c,r.v);if(e){say("pkMsg",e);return}closeModal(m);o.done(r)}
+  function finish(v){var mx=maxV(st.b,st.c),r={b:st.b,c:st.c,v:v||(mx?"1-"+mx:"")},e=vsErr(r.b,r.c,r.v);if(e){say("pkMsg",e);return}closeModal(m);o.done([r])}
+  /* «Вся глава» и «Несколько глав целиком» сохраняют обычный диапазон 1-последний стих (по таблице стихов azb) — так же, как ручной выбор */
+  function finishCh(){if(!st.cr){say("pkMsg","Нажмите на первую и последнюю главу.");return}var rs=[];for(var c=st.cr[0];c<=st.cr[1];c++){var mx=maxV(st.b,c);rs.push({b:st.b,c:c,v:mx?"1-"+mx:""})}closeModal(m);o.done(rs)}
   function draw(){bd.innerHTML="";ft.innerHTML="";bd.appendChild(path());var cb=h("button","btn","Отмена");cb.type="button";cb.onclick=function(){closeModal(m)};ft.appendChild(cb);
     if(st.step==="b"){var q=h("input");q.type="search";q.placeholder="Найти книгу: Zəbur, Yəhya, 1 Kor…";q.setAttribute("aria-label","Найти книгу");bd.appendChild(q);
       var secs=[];[["Əhdi-Ətiq",0,39],["Əhdi-Cədid",39,66]].forEach(function(s){var hh=h("h3","ap-pkh",s[0]),g=h("div","ap-bgrid");bd.appendChild(hh);bd.appendChild(g);
@@ -135,13 +139,25 @@ function openPicker(o){var st={step:"b",b:null,c:0,rg:[],start:null},rd=readMap(
       q.addEventListener("input",function(){var f=fold(q.value.trim()).replace(/\s+/g," "),any=0;secs.forEach(function(s){var vis=0;Array.prototype.forEach.call(s[1].children,function(bt){var ok=!f||BAL[bt.dataset.k].some(function(a){return a.indexOf(f)>=0||a.replace(/ /g,"").indexOf(f.replace(/ /g,""))>=0});bt.hidden=!ok;if(ok)vis++});s[0].hidden=s[1].hidden=!vis;any+=vis});none.hidden=!!any});
       q.addEventListener("keydown",function(ev){if(ev.key==="Enter"){ev.preventDefault();var v=bd.querySelectorAll(".ap-bb:not([hidden])");if(v.length===1)v[0].click()}});
       if(window.matchMedia&&matchMedia("(pointer:fine)").matches)setTimeout(function(){q.focus()},0)}
-    else if(st.step==="c"){var b=BK[st.b];bd.appendChild(h("p","hint","Выберите главу. Точкой отмечены уже прочитанные."));var g=h("div","ap-ngrid");
-      for(var c=1;c<=b.c;c++){var bt=h("button","ap-nb"+((rd[b.k]||{})[c]?" ap-rdc":""),String(c));bt.type="button";bt.setAttribute("aria-label",b.n+" "+c+((rd[b.k]||{})[c]?", прочитана":""));bt.onclick=(function(c){return function(){st.c=c;st.step="v";st.rg=[];st.start=null;draw()}})(c);g.appendChild(bt)}bd.appendChild(g)}
-    else{var mx=maxV(st.b,st.c);bd.appendChild(h("p","hint","Нажмите на первый и последний стих — получится диапазон. Можно выбрать несколько диапазонов. Без стихов будет добавлена вся глава."));
-      var sel=h("div","ap-pksel");sel.setAttribute("aria-live","polite");bd.appendChild(sel);var g=h("div","ap-ngrid");
+    else if(st.step==="c"){var b=BK[st.b];bd.appendChild(h("p","hint",st.mc?"Нажмите на первую и последнюю главу — все стихи этих глав будут отмечены как прочитанные.":"Выберите главу. Точкой отмечены уже прочитанные."));
+      var row=h("div","ap-pkrow"),mcb=h("button","btn sm ap-gp ap-whole","Несколько глав целиком");mcb.type="button";mcb.id="pkMulti";mcb.setAttribute("aria-pressed",st.mc?"true":"false");
+      mcb.onclick=function(){st.mc=!st.mc;st.cs=null;st.cr=null;draw();var f=$("pkMulti");if(f)f.focus()};row.appendChild(mcb);var csel=h("div","ap-pksel");csel.setAttribute("aria-live","polite");row.appendChild(csel);bd.appendChild(row);
+      var g=h("div","ap-ngrid");
+      function cupd(){Array.prototype.forEach.call(g.children,function(bt){var c=+bt.textContent,on=!!(st.cr&&c>=st.cr[0]&&c<=st.cr[1]);bt.classList.toggle("ap-on",st.mc&&on);bt.classList.toggle("ap-st",st.mc&&st.cs===c);if(st.mc)bt.setAttribute("aria-pressed",on?"true":"false");else bt.removeAttribute("aria-pressed")});
+        if(!st.mc){csel.textContent="";return}var n=st.cr?st.cr[1]-st.cr[0]+1:0;
+        csel.textContent=n?b.n+" "+(n>1?st.cr[0]+"–"+st.cr[1]:st.cr[0])+" · "+n+" "+plur(n,"глава","главы","глав")+" целиком"+(st.cs!==null?" · выберите последнюю главу":""):"Выберите первую главу"}
+      for(var c=1;c<=b.c;c++){var bt=h("button","ap-nb"+((rd[b.k]||{})[c]?" ap-rdc":""),String(c));bt.type="button";bt.setAttribute("aria-label",b.n+" "+c+((rd[b.k]||{})[c]?", прочитана":""));
+        bt.onclick=(function(c){return function(){if(st.mc){if(st.cs===null){st.cs=c;st.cr=[c,c]}else{st.cr=[Math.min(st.cs,c),Math.max(st.cs,c)];st.cs=null}cupd();return}
+          st.c=c;st.step="v";st.rg=[];st.start=null;draw()}})(c);g.appendChild(bt)}bd.appendChild(g);
+      if(st.mc){var msg0=h("div","msg");msg0.id="pkMsg";bd.appendChild(msg0);var ok0=h("button","btn main","Добавить");ok0.type="button";ok0.id="pkAddCh";ok0.onclick=finishCh;ft.appendChild(ok0)}cupd()}
+    else{var mx=maxV(st.b,st.c);bd.appendChild(h("p","hint","Нажмите на первый и последний стих — получится диапазон. Можно выбрать несколько диапазонов. «Вся глава» отмечает все стихи сразу."));
+      var row=h("div","ap-pkrow"),wb=h("button","btn sm ap-gp ap-whole","Вся глава");wb.type="button";wb.id="pkWhole";row.appendChild(wb);
+      var sel=h("div","ap-pksel");sel.setAttribute("aria-live","polite");row.appendChild(sel);bd.appendChild(row);var g=h("div","ap-ngrid");
+      function full(){return st.start===null&&st.rg.length===1&&st.rg[0][0]===1&&st.rg[0][1]===mx}
+      wb.onclick=function(){st.start=null;st.rg=full()?[]:[[1,mx]];upd()};
       function inR(v){for(var i=0;i<st.rg.length;i++)if(v>=st.rg[i][0]&&v<=st.rg[i][1])return i;return -1}
       function upd(){Array.prototype.forEach.call(g.children,function(bt){var v=+bt.textContent;bt.classList.toggle("ap-on",inR(v)>=0);bt.classList.toggle("ap-st",st.start===v);bt.setAttribute("aria-pressed",inR(v)>=0||st.start===v)});
-        var vt=vtxt();sel.textContent=BK[st.b].n+" "+st.c+(vt?":"+vt:" (вся глава)")+(st.start?" · выберите конец диапазона":"");}
+        var vt=vtxt(),f=full();wb.setAttribute("aria-pressed",f?"true":"false");sel.textContent=vt?BK[st.b].n+" "+st.c+":"+vt+(f?" · вся глава":"")+(st.start?" · выберите конец диапазона":""):BK[st.b].n+" "+st.c+" · выберите стихи или «Вся глава»";}
       for(var v=1;v<=mx;v++){var bt=h("button","ap-nb",String(v));bt.type="button";bt.onclick=(function(v){return function(){
         if(st.start===null){var i=inR(v);if(i>=0)st.rg.splice(i,1);else st.start=v}
         else{var a=Math.min(st.start,v),z=Math.max(st.start,v);st.start=null;var nr=[a,z],keep=[];st.rg.forEach(function(r){if(r[1]<a-1||r[0]>z+1)keep.push(r);else{nr[0]=Math.min(nr[0],r[0]);nr[1]=Math.max(nr[1],r[1])}});keep.push(nr);st.rg=keep}

@@ -22,7 +22,7 @@ function todayStr(){var d=new Date();return d.getFullYear()+"-"+pad(d.getMonth()
 function fmtDate(s){var a=s.split("-");return new Date(+a[0],+a[1]-1,+a[2]).toLocaleDateString("ru-RU",{weekday:"short",day:"numeric",month:"long",year:"numeric"})}
 function secsOf(e){return (+e.min||0)*60+(+e.sec||0)}
 function fmtSecs(s){var H=Math.floor(s/3600),M=Math.floor(s%3600/60),S=s%60;return (H?H+" ч ":"")+(M?M+" мин ":"")+(S&&!H?S+" сек":"")}
-function refLabel(r){var b=BK[r.b];return (b?b.n:r.b)+" "+r.c+(r.v?":"+r.v:"")}
+function refLabel(r){var b=BK[r.b],mx=b?maxV(r.b,+r.c):0;return (b?b.n:r.b)+" "+r.c+(r.v?":"+r.v:mx?":1-"+mx:"")}
 function monthName(k){var a=k.split("-");return ["Январь","Февраль","Март","Апрель","Май","Июнь","Июль","Август","Сентябрь","Октябрь","Ноябрь","Декабрь"][+a[1]-1]+" "+a[0]}
 function say(id,t){$(id).textContent=t}
 var curTab="W",cloudLoading=false,dataReady=false;
@@ -39,7 +39,9 @@ function moveInd(){var b=$("tab"+curTab),ind=$("navInd");if(!b.getClientRects().
   ind.style.width=b.offsetWidth+"px";ind.style.height=b.offsetHeight+"px";ind.style.transform="translate("+b.offsetLeft+"px,"+b.offsetTop+"px)"}
 window.addEventListener("resize",moveInd);
 function chip(list,i,cls,txt,redraw){var c=h("span","chip "+cls);c.appendChild(h("span","",txt));var b=h("button","","×");b.type="button";b.setAttribute("aria-label","Убрать");b.onclick=function(){list.splice(i,1);redraw()};c.appendChild(b);return c}
-function drawRefs(){var d=$("refs");d.innerHTML="";refs.forEach(function(r,i){d.appendChild(chip(refs,i,"",refLabel(r),drawRefs))})}
+function drawRefs(){var d=$("refs");d.innerHTML="";refs.forEach(function(r,i){var c=chip(refs,i,"",refLabel(r),drawRefs),s=c.firstChild,b=h("button","ap-cref",s.textContent);b.type="button";b.title="Изменить отрывок";b.setAttribute("aria-label","Изменить отрывок "+s.textContent);
+  /* нажатие на отрывок открывает выбор стихов с текущим диапазоном; полная глава показывается с активной «Вся глава» */
+  b.onclick=function(){openPicker({title:"Изменить отрывок",init:r,done:function(rs){Array.prototype.splice.apply(refs,[i,1].concat(rs));drawRefs();say("msg","")}})};c.replaceChild(b,s);d.appendChild(c)})}
 function drawTags(){var d=$("tags");d.innerHTML="";tags.forEach(function(t,i){d.appendChild(chip(tags,i,"tag",t,drawTags))})}
 function addTag(){var t=$("fTag").value.replace(/,/g," ").trim();if(t&&tags.indexOf(t)<0){tags.push(t);drawTags()}$("fTag").value=""}
 $("fTag").addEventListener("keydown",function(e){if(e.key==="Enter"||e.key===","){e.preventDefault();addTag()}});
@@ -79,7 +81,7 @@ function newEntry(){if(sheetOpen())return;resetForm();if(!tm.start)fillTime();fS
 function startEdit(e){closeAll().then(function(ok){if(!ok)return;resetForm();editId=e.id;$("fDate").value=e.date;$("fMin").value=e.min||"";$("fSec").value=e.sec||"";$("fKey").value=e.key||"";$("fNote").value=e.note||"";
   refs=(e.refs||[]).slice();tags=(e.tags||[]).slice();drawRefs();drawTags();$("save").textContent="Сохранить изменения";$("fTitle").textContent="Изменить запись";fSnap=formState();openSheet()})}
 $("cancel").onclick=function(){closeTop()};
-$("pickBtn").onclick=function(){openPicker({done:function(r){refs.push(r);drawRefs();say("msg","")}})};
+$("pickBtn").onclick=function(){openPicker({done:function(rs){rs.forEach(function(r){refs.push(r)});drawRefs();say("msg","")}})};
 $("save").onclick=function(){
   if(tm.start)tPause();
   addTag();
@@ -132,7 +134,7 @@ function prefixSel(p){var v=ta.value,s=v.lastIndexOf("\n",ta.selectionStart-1)+1
   var ls=v.slice(s,e).split("\n"),all=ls.every(function(l){return l.indexOf(p)===0}),out=ls.map(function(l){return all?l.slice(p.length):p+l}).join("\n");
   edit(s,e,out,s+(ls.length>1?0:out.length),s+out.length)}
 function insertRef(){var s=ta.selectionStart,e=ta.selectionEnd;
-  openPicker({title:"Вставить ссылку на отрывок",done:function(r){var val=ta.value,t=refLabel(r);
+  openPicker({title:"Вставить ссылку на отрывок",done:function(rs){var val=ta.value,t=rs.map(refLabel).join("; ");
     if(s>0&&!/\s/.test(val[s-1]))t=" "+t;if(e<val.length&&!/\s/.test(val[e]))t+=" ";
     edit(s,e,t,s+t.length,s+t.length);say("msg","")}})}
 Array.prototype.forEach.call($("tbar").querySelectorAll("button"),function(b){
