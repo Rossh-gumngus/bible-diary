@@ -225,7 +225,27 @@ function openPicker(o){var st={step:"b",b:null,c:0,rg:[],start:null,mc:false,cs:
 
 /* --- focus mode --- */
 var wake=null;
-function openFocus(){var M=MG(),P=PG(),t=[];if(M)t.push("Минуты в день: "+goalInfo(M).bar.txt);if(P)t.push("«"+PLAN[P.plan].t+"»: "+planInfo(P).bar.txt);$("fsSub").textContent=t.length?t.join(" · "):"Спокойного чтения. Таймер продолжит идти, даже если закрыть этот экран.";
+function renderFocusPlan(){
+  var minutes=MG(),plan=PG(),status=[];
+  if(minutes)status.push(goalInfo(minutes).bar.txt);
+  var position=plan?focusPlanPosition(plan):[];
+  if(plan)status.push(PLAN[plan.plan].t+(position.length?"":" · план выполнен"));
+  say("fsSub",status.join(" · ")||"Таймер продолжит идти, даже если закрыть этот экран.");
+  $("fsLayout").classList.toggle("with-plan",!!position.length);
+  ["Current","Next"].forEach(function(side,index){
+    var section=$("fs"+side),box=$("fs"+side+"Items"),group=position[index];
+    section.hidden=!position.length;
+    box.replaceChildren();
+    if(!position.length)return;
+    if(!group){box.appendChild(h("p","hint","Это последний незавершённый день плана."));return}
+    box.appendChild(h("p","hint","День "+group.day+" по плану"));
+    var list=h("ul");
+    group.items.forEach(function(item){list.appendChild(h("li","",bName(item.b)+" "+itLab(item)))});
+    box.appendChild(list);
+  });
+}
+function openFocus(){
+  renderFocusPlan();
   openModal($("focusBox"),{variant:"full",label:"focusTitle",keep:true,focus:"#fsStart",onClose:function(){if(wake){try{wake.release()}catch(e){}wake=null}}});
   try{if(navigator.wakeLock)navigator.wakeLock.request("screen").then(function(w){wake=w},function(){})}catch(e){}}
 $("focusBtn").onclick=openFocus;
