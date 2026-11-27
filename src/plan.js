@@ -15,7 +15,7 @@ function planDate(g,n){return dstr(dnum(g.start)+n-1)}
 function shortDay(s){var a=s.split("-");return (+a[2])+" "+MS[+a[1]-1]}
 /* выполнено = есть запись с датой не раньше старта плана, где указана эта глава (для части главы — пересекающиеся стихи или вся глава) */
 function planState(g,list,today){var p=PLAN[g.plan],days=planDays(p),N=days.length,s=g.start,D=dnum(today||todayStr())-dnum(s)+1,idx={};
-  (list||entries).forEach(function(e){if((e.date||"")>=s)refChapters(e.refs).forEach(function(r){var k=r.b+" "+(+r.c);(idx[k]=idx[k]||[]).push(String(r.v||""))})});
+  readingEntries(list).forEach(function(e){if((e.date||"")>=s)refChapters(e.refs).forEach(function(r){var k=r.b+" "+(+r.c);(idx[k]=idx[k]||[]).push(String(r.v||""))})});
   function isDone1(it){var l=idx[it.b+" "+it.c];if(!l)return false;if(!it.v)return true;return l.some(function(v){return !v||vOverlap(v,it.v)})}
   function isDone(it){return it.parts?it.parts.every(isDone1):isDone1(it)}
   var mk=days.map(function(d){return d.map(isDone)}),total=0,done=0,dueN=0,dueY=0,k=0,pref=true,firstUndone=0;

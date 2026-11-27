@@ -14,7 +14,8 @@
 <nav class="ap-nav" id="nav" role="tablist" aria-label="Разделы" aria-orientation="horizontal">
   <div class="ap-navbrand" aria-hidden="true"><span class="ap-logo"><svg viewBox="0 0 24 24"><circle cx="17" cy="7" r="2.6"/><path d="M17 1.8v1.1M21.4 7h1.1M20.2 3.8l.8-.8M3 12.5c3-1.5 6-1.5 9 0v8c-3-1.5-6-1.5-9 0zM12 12.5c3-1.5 6-1.5 9 0v8c-3-1.5-6-1.5-9 0z"/></svg></span><span>Дневник чтения<br>Библии</span></div>
   <button role="tab" id="tabW" aria-controls="pW" aria-selected="true"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 5.5c3-1.5 6-1.5 9 0v14c-3-1.5-6-1.5-9 0zM12 5.5c3-1.5 6-1.5 9 0v14c-3-1.5-6-1.5-9 0z"/></svg><span>Читать</span></button>
-  <button role="tab" id="tabL" aria-controls="pL" aria-selected="false" tabindex="-1"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6h11M9 12h11M9 18h11M4.5 6h.01M4.5 12h.01M4.5 18h.01"/></svg><span>Записи</span></button>
+  <button role="tab" id="tabL" aria-controls="pL" aria-selected="false" tabindex="-1"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6h11M9 12h11M9 18h11M4.5 6h.01M4.5 12h.01M4.5 18h.01"/></svg><span>Дневник</span></button>
+  <button role="tab" id="tabN" aria-controls="pN" aria-selected="false" tabindex="-1"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 3h14v18H5zM8 3v18M11 8h5m-5 4h5m-5 4h3"/></svg><span>Блокнот</span></button>
   <button role="tab" id="tabP" aria-controls="pP" aria-selected="false" tabindex="-1"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20V11M10 20V5M16 20v-7M2 20h20"/></svg><span>Прогресс</span></button>
   <button role="tab" id="tabY" aria-controls="pY" aria-selected="false" tabindex="-1"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h12v18l-6-4.5L6 21z"/></svg><span>Книга года</span></button>
   <span class="ap-ind" id="navInd" aria-hidden="true"></span>
@@ -35,24 +36,26 @@
       <div class="ap-tl1"><span class="ap-lbl">Таймер чтения</span><span class="ap-clk" id="clk">00:00:00</span></div>
       <div class="ap-tbtns"><button class="btn ap-pri" type="button" id="tStart" data-tstart>Старт</button><button class="btn" type="button" id="tReset">Сбросить</button><button class="btn" type="button" id="focusBtn">Режим чтения</button><button class="btn" type="button" id="tDone">Завершить чтение</button></div>
     </div>
-    <button class="ap-cta" type="button" id="newBtn"><span aria-hidden="true">+</span> Новая запись</button>
-    <h2 class="ap-h2 ap-rh"><svg class="ap-leaf" viewBox="0 0 32 32" aria-hidden="true"><path d="M6 26C6 14 14 6 26 6c0 12-8 20-20 20zM6 26L19 13"/></svg>Последние записи</h2>
+    <button class="ap-cta" type="button" id="newBtn"><span aria-hidden="true">+</span> Отметить чтение</button>
+    <h2 class="ap-h2 ap-rh"><svg class="ap-leaf" viewBox="0 0 32 32" aria-hidden="true"><path d="M6 26C6 14 14 6 26 6c0 12-8 20-20 20zM6 26L19 13"/></svg>Последнее чтение</h2>
     <div id="recent"></div>
   </section>
 
   <section id="pL" class="ap-panel" role="tabpanel" aria-labelledby="tabL" hidden>
-    <div class="ap-ltools" role="search">
-      <input type="search" id="q" placeholder="Поиск по мысли, заметке, темам, отрывкам" aria-label="Поиск">
-      <button type="button" class="btn ap-fbtn" id="fltBtn" aria-haspopup="dialog"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 5h18l-7 8v6l-4-2v-4z"/></svg><span>Фильтры</span><span class="ap-badge" id="fltN" hidden></span></button>
-    </div>
-    <div class="ap-vrow">
-      <div class="ap-views" role="radiogroup" aria-label="Вид списка">
-        <button type="button" role="radio" data-view="cards" aria-checked="true">Карточки</button><button type="button" role="radio" data-view="compact" aria-checked="false" tabindex="-1">Список</button><button type="button" role="radio" data-view="timeline" aria-checked="false" tabindex="-1">Лента</button>
+    <div id="entryListTools">
+      <div class="ap-ltools" role="search">
+        <input type="search" id="q" placeholder="Поиск по мысли, заметке, темам, отрывкам" aria-label="Поиск">
+        <button type="button" class="btn ap-fbtn" id="fltBtn" aria-haspopup="dialog"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 5h18l-7 8v6l-4-2v-4z"/></svg><span>Фильтры</span><span class="ap-badge" id="fltN" hidden></span></button>
       </div>
-      <span class="found" id="found" aria-live="polite"></span>
-    </div>
-    <div class="ap-achips" id="aChips"></div>
-    <div id="list"></div>
+      <div class="ap-vrow">
+        <div class="ap-views" role="radiogroup" aria-label="Вид списка">
+          <button type="button" role="radio" data-view="cards" aria-checked="true">Карточки</button><button type="button" role="radio" data-view="compact" aria-checked="false" tabindex="-1">Список</button><button type="button" role="radio" data-view="timeline" aria-checked="false" tabindex="-1">Лента</button>
+        </div>
+        <span class="found" id="found" aria-live="polite"></span>
+      </div>
+      <div class="ap-achips" id="aChips"></div>
+      <div id="list"></div>
+      </div>
     <div class="ap-sec ap-sync" id="syncBox">
       <h3 class="ap-h3">Синхронизация с Google Диском</h3>
       <p class="hint" id="syNote" hidden></p>
@@ -67,6 +70,10 @@
       <div class="msg" id="bmsg" aria-live="polite"></div>
     </div>
     <div class="foot" id="sync"></div>
+  </section>
+
+  <section id="pN" class="ap-panel" role="tabpanel" aria-labelledby="tabN" hidden>
+    <button class="ap-cta" type="button" id="newNoteBtn"><span aria-hidden="true">+</span> Новая заметка</button>
   </section>
 
   <section id="pP" class="ap-panel" role="tabpanel" aria-labelledby="tabP" hidden>
@@ -132,32 +139,34 @@
     <div class="ap-db">
       <div class="row wrapm">
         <div><label for="fDate">Дата</label><input type="date" id="fDate"></div>
-        <div><label for="fMin">Минуты</label><input type="number" id="fMin" min="0" inputmode="numeric"></div>
-        <div><label for="fSec">Секунды</label><input type="number" id="fSec" min="0" max="59" inputmode="numeric"></div>
+        <div id="entryMinutes"><label for="fMin">Минуты</label><input type="number" id="fMin" min="0" inputmode="numeric"></div>
+        <div id="entrySeconds"><label for="fSec">Секунды</label><input type="number" id="fSec" min="0" max="59" inputmode="numeric"></div>
       </div>
-      <label>Что прочитано</label>
+      <label id="entryRefLabel">Что прочитано</label>
       <div class="chips" id="refs"></div>
       <div class="acts">
         <button type="button" class="btn ap-pick" id="typeReading">Ввести отрывки</button>
         <button type="button" class="btn ap-pick" id="pickBtn">Выбрать по главам</button>
       </div>
-      <label for="fKey">Главная мысль или стих дня</label>
-      <input type="text" id="fKey">
-      <label for="fTag">Темы (Enter после каждой)</label>
-      <input type="text" id="fTag" list="tagList" placeholder="например: Padşahlıq">
-      <datalist id="tagList"></datalist>
-      <div class="chips" id="tags"></div>
-      <label for="fNote">Заметки</label>
-      <div class="tbar" id="tbar" role="toolbar" aria-label="Оформление заметки">
-        <button type="button" class="btn b" data-w="**" title="Жирный" aria-label="Жирный">Ж</button>
-        <button type="button" class="btn i" data-w="*" title="Курсив" aria-label="Курсив">К</button>
-        <button type="button" class="btn" data-p="> " title="Цитата">Цитата</button>
-        <button type="button" class="btn" data-p="- " title="Список">Список</button>
-        <button type="button" class="btn" id="insRef" title="Вставить ссылку на отрывок">Отрывок</button>
-      </div>
-      <textarea id="fNote"></textarea>
-      <div class="pv note" id="pv" hidden></div>
-      <button type="button" class="btn sm pvb" id="pvBtn" aria-pressed="false">Предпросмотр</button>
+      <div id="noteFields" hidden>
+        <label for="fKey">Заголовок</label>
+        <input type="text" id="fKey">
+        <label for="fTag">Темы (Enter после каждой)</label>
+        <input type="text" id="fTag" list="tagList" placeholder="например: Padşahlıq">
+        <datalist id="tagList"></datalist>
+        <div class="chips" id="tags"></div>
+        <label for="fNote">Текст заметки</label>
+        <div class="tbar" id="tbar" role="toolbar" aria-label="Оформление заметки">
+          <button type="button" class="btn b" data-w="**" title="Жирный" aria-label="Жирный">Ж</button>
+          <button type="button" class="btn i" data-w="*" title="Курсив" aria-label="Курсив">К</button>
+          <button type="button" class="btn" data-p="> " title="Цитата">Цитата</button>
+          <button type="button" class="btn" data-p="- " title="Список">Список</button>
+          <button type="button" class="btn" id="insRef" title="Вставить ссылку на отрывок">Отрывок</button>
+        </div>
+        <textarea id="fNote"></textarea>
+        <div class="pv note" id="pv" hidden></div>
+        <button type="button" class="btn sm pvb" id="pvBtn" aria-pressed="false">Предпросмотр</button>
+        </div>
       <div class="msg" id="msg" aria-live="polite"></div>
     </div>
     <div class="ap-df"><button type="button" class="btn" id="cancel">Отмена</button><button type="button" class="btn main" id="save">Сохранить запись</button></div>
@@ -168,19 +177,21 @@
     <div class="ap-db">
       <div class="fgrid">
         <div><label for="qDate">Дата</label><input type="date" id="qDate"></div>
-        <div><label for="qTag">Тема</label><select id="qTag"></select></div>
+        <div id="filterTopic"><label for="qTag">Тема</label><select id="qTag"></select></div>
         <div><label for="qBook">Книга</label><select id="qBook"></select></div>
         <div><label for="qCh">Глава</label><select id="qCh"></select></div>
       </div>
       <label class="ck"><input type="checkbox" id="qFav"> Только избранное</label>
       <div class="fbot"><button type="button" class="btn sm" id="qReset">Сбросить фильтры</button><span class="found" id="found2"></span></div>
-      <hr class="ap-hr">
-      <h3 class="ap-h3">Управление темами</h3>
-      <div class="row ap-tmr"><select id="tmOld" aria-label="Тема"></select><input type="text" id="tmNew" placeholder="новое название" aria-label="Новое название"></div>
-      <div class="row ap-tmr"><button type="button" class="btn sm" id="tmRen">Переименовать</button><button type="button" class="btn sm" id="tmDel">Удалить тему</button></div>
-      <div class="msg" id="tmMsg" aria-live="polite"></div>
+      <div id="noteTopics">
+        <hr class="ap-hr">
+        <h3 class="ap-h3">Управление темами</h3>
+        <div class="row ap-tmr"><select id="tmOld" aria-label="Тема"></select><input type="text" id="tmNew" placeholder="новое название" aria-label="Новое название"></div>
+        <div class="row ap-tmr"><button type="button" class="btn sm" id="tmRen">Переименовать</button><button type="button" class="btn sm" id="tmDel">Удалить тему</button></div>
+        <div class="msg" id="tmMsg" aria-live="polite"></div>
+        </div>
     </div>
-    <div class="ap-df"><button type="button" class="btn main" data-close>Показать записи</button></div>
+    <div class="ap-df"><button type="button" class="btn main" data-close id="showFiltered">Показать записи</button></div>
   </div>
 
   <div class="ap-focus" id="focusBox">

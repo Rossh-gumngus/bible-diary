@@ -12,8 +12,22 @@ function vsErr(k,c,v){if(!v)return "";var mx=maxV(k,c),p=v.split(","),i,a,z,m;
     if(z<a)return "Диапазон стихов пишите по возрастанию: "+z+"-"+a+".";
     if(mx&&z>mx)return "В "+BK[k].n+" "+c+" всего "+mx+" "+plurV(mx)+"."}
   return ""}
-var LKEY="bd2-entries",TKEY="bd2-timer",entries=[],coll=null,editId=null,refs=[],tags=[],openM={},tm={acc:0,start:0};
-try{var raw=localStorage.getItem(LKEY);if(raw)entries=JSON.parse(raw)||[]}catch(e){}
+var LKEY="bd2-entries",TKEY="bd2-timer",entries=[],coll=null,editId=null,refs=[],tags=[],openM={L:{},N:{}},tm={acc:0,start:0};
+function isNote(e){return e.section==="note"}
+function readingEntries(list){return (list||entries).filter(function(e){return !isNote(e)})}
+function splitLegacyEntries(list){
+  return list.flatMap(function(e){
+    if(!e||!e.id)return [];
+    if(e.section==="note"||e.section==="reading")return [e];
+    var hasNote=!!(e.key||e.note||(e.tags||[]).length);
+    var hasReading=!!((e.refs||[]).length||secsOf(e));
+    var reading=Object.assign({},e,{section:"reading",key:"",tags:[],note:""});
+    if(!hasNote)return [reading];
+    var note=Object.assign({},e,{section:"note",id:hasReading?e.id+"~note":e.id,min:"",sec:""});
+    return hasReading?[reading,note]:[note];
+  });
+}
+try{var raw=localStorage.getItem(LKEY);if(raw){var saved=JSON.parse(raw);if(Array.isArray(saved))entries=splitLegacyEntries(saved)}}catch(e){}
 try{var tr=localStorage.getItem(TKEY);if(tr)tm=JSON.parse(tr)||tm}catch(e){}
 function $(i){return document.getElementById(i)}
 function h(t,c,x){var e=document.createElement(t);if(c)e.className=c;if(x!==undefined)e.textContent=x;return e}
@@ -80,13 +94,16 @@ function refChapters(refs){
 function monthName(k){var a=k.split("-");return ["Январь","Февраль","Март","Апрель","Май","Июнь","Июль","Август","Сентябрь","Октябрь","Ноябрь","Декабрь"][+a[1]-1]+" "+a[0]}
 function say(id,t){$(id).textContent=t}
 var curTab="W",cloudLoading=false,dataReady=false;
-function tab(w,opt){var prev=curTab;curTab=w;["W","L","P","Y"].forEach(function(x){var on=w===x,b=$("tab"+x);$("p"+x).hidden=!on;b.setAttribute("aria-selected",on);b.tabIndex=on?0:-1});
+var tabs=["W","L","N","P","Y"];
+function tab(w,opt){var prev=curTab;curTab=w;tabs.forEach(function(x){var on=w===x,b=$("tab"+x);$("p"+x).hidden=!on;b.setAttribute("aria-selected",on);b.tabIndex=on?0:-1});
   if(prev!==w){var p=$("p"+w);p.classList.remove("ap-enter");void p.offsetWidth;p.classList.add("ap-enter");if(!(opt&&opt.keep))window.scrollTo(0,0)}
   moveInd();
-  if(w==="L")renderList();else if(w==="P")renderProg();else if(w==="Y")renderYB();else renderRecent()}
-["W","L","P","Y"].forEach(function(x){$("tab"+x).onclick=function(){tab(x)}});
-$("nav").addEventListener("keydown",function(e){var o=["W","L","P","Y"],i=o.indexOf(curTab),n=null;
-  if(e.key==="ArrowRight"||e.key==="ArrowDown")n=o[(i+1)%4];else if(e.key==="ArrowLeft"||e.key==="ArrowUp")n=o[(i+3)%4];else if(e.key==="Home")n="W";else if(e.key==="End")n="Y";
+  var action=w==="N"?"Новая заметка":"Отметить чтение";
+  $("fab").title=action;$("fab").setAttribute("aria-label",action);
+  if(w==="L"||w==="N"){if(prev!==w)setListSection(w);renderList()}else if(w==="P")renderProg();else if(w==="Y")renderYB();else renderRecent()}
+tabs.forEach(function(x){$("tab"+x).onclick=function(){tab(x)}});
+$("nav").addEventListener("keydown",function(e){var o=tabs,i=o.indexOf(curTab),n=null;
+  if(e.key==="ArrowRight"||e.key==="ArrowDown")n=o[(i+1)%o.length];else if(e.key==="ArrowLeft"||e.key==="ArrowUp")n=o[(i+o.length-1)%o.length];else if(e.key==="Home")n="W";else if(e.key==="End")n="Y";
   if(n){e.preventDefault();tab(n);$("tab"+n).focus()}});
 function moveInd(){var b=$("tab"+curTab),ind=$("navInd");if(!b.getClientRects().length)return;
   /* stage 10: индикатор — «пилюля» под активной вкладкой (и в нижней панели, и в боковой) */
@@ -103,7 +120,7 @@ $("fTag").addEventListener("blur",addTag);
 
 /* storage */
 function persist(){if(coll)return;try{localStorage.setItem(LKEY,JSON.stringify(entries))}catch(e){}}
-function body(e){return{kind:"entry",date:e.date,min:e.min,sec:e.sec,refs:e.refs||[],key:e.key||"",tags:e.tags||[],note:e.note||"",fav:!!e.fav}}
+function body(e){return{kind:"entry",section:e.section,date:e.date,min:e.min,sec:e.sec,refs:e.refs||[],key:e.key||"",tags:e.tags||[],note:e.note||"",fav:!!e.fav}}
 function putEntry(e){if(coll){coll.doc(e.id).set(body(e)).then(function(){setSync("ok")},function(){setSync("err")})}
   else{stampE(e);var i=entries.findIndex(function(x){return x.id===e.id});if(i>=0)entries[i]=e;else entries.push(e);persist();render();syncDirty()}}
 function saveMany(list){if(!list.length)return;if(coll){list.forEach(function(e){coll.doc(e.id).set(body(e)).then(function(){setSync("ok")},function(){setSync("err")})})}
@@ -119,18 +136,40 @@ async function initCloud(){try{
   cloudLoading=true;render();
   var db=await claude.use("db"),user=await claude.use("user");if(!db||!user)return noCloud();
   var id=await user.id();if(!id)return noCloud();
-  var c=db.collection("data/users/"+id),local=entries.slice(),to=setTimeout(function(){setSync("err");if(cloudLoading){cloudLoading=false;render()}},10000);
+  var c=db.collection("data/users/"+id),local=entries.slice(),migrating=new Set(),to=setTimeout(function(){setSync("err");if(cloudLoading){cloudLoading=false;render()}},10000);
   coll=c;
   c.onSnapshot(function(snap){clearTimeout(to);
-    entries=snap.docs.filter(function(d){return d.exists&&(d.data()||{}).kind==="entry"}).map(function(d){return Object.assign({id:d.id},d.data())});
+    var remote=snap.docs.filter(function(d){return d.exists&&(d.data()||{}).kind==="entry"}).map(function(d){return Object.assign({id:d.id},d.data())});
+    var remoteIds=new Set(remote.map(function(e){return e.id}));
+    entries=remote.flatMap(function(e){
+      var parts=splitLegacyEntries([e]);
+      if(parts[0]===e)return parts;
+      var note=parts[1],needsNote=note&&!remoteIds.has(note.id);
+      if(!migrating.has(e.id)){
+        migrating.add(e.id);
+        var copied=needsNote?c.doc(note.id).set(body(note)):Promise.resolve();
+        copied.then(function(){return c.doc(e.id).set(body(parts[0]))})
+          .catch(function(){setSync("err")}).finally(function(){migrating.delete(e.id)});
+      }
+      return [parts[0]];
+    });
     goalFromSnap(snap);cloudLoading=false;dataReady=true;render();setSync("ok")},function(){clearTimeout(to);coll=null;setSync("err");noCloud()});
   if(local.length){local.forEach(putEntry);try{localStorage.removeItem(LKEY)}catch(e){}}
 }catch(e){coll=null;setSync("err");noCloud()}}
-var fSnap="";
+var fSnap="",entrySection="reading";
 function formState(){return JSON.stringify([$("fDate").value,$("fMin").value,$("fSec").value,$("fKey").value,$("fTag").value.trim(),$("fNote").value,refs,tags])}
 var entryTimer=null;
-function resetForm(){entryTimer=null;editId=null;refs=[];tags=[];$("fDate").value=todayStr();["fMin","fSec","fKey","fTag","fNote"].forEach(function(i){$(i).value=""});
-  drawRefs();drawTags();say("msg","");setPreview(false);$("save").textContent="Сохранить запись";$("fTitle").textContent="Новая запись";fSnap=formState()}
+function setEntrySection(section){
+  entrySection=section;
+  var note=section==="note";
+  $("entryMinutes").hidden=$("entrySeconds").hidden=note;
+  $("noteFields").hidden=!note;
+  say("entryRefLabel",note?"Отрывки к заметке":"Что прочитано");
+  say("fTitle",note?"Новая заметка":"Отметить чтение");
+  say("save",note?"Сохранить заметку":"Сохранить чтение");
+}
+function resetForm(){setEntrySection("reading");entryTimer=null;editId=null;refs=[];tags=[];$("fDate").value=todayStr();["fMin","fSec","fKey","fTag","fNote"].forEach(function(i){$(i).value=""});
+  drawRefs();drawTags();say("msg","");setPreview(false);fSnap=formState()}
 function fillTime(){var s=Math.floor(tEl());if(s>0){$("fMin").value=Math.floor(s/60);$("fSec").value=s%60}}
 function newEntry(fromReading){
   if(sheetOpen())return;
@@ -139,17 +178,30 @@ function newEntry(fromReading){
   fSnap=formState();
   openSheet();
 }
-function startEdit(e){closeAll().then(function(ok){if(!ok)return;resetForm();editId=e.id;$("fDate").value=e.date;$("fMin").value=e.min||"";$("fSec").value=e.sec||"";$("fKey").value=e.key||"";$("fNote").value=e.note||"";
-  refs=(e.refs||[]).slice();tags=(e.tags||[]).slice();drawRefs();drawTags();$("save").textContent="Сохранить изменения";$("fTitle").textContent="Изменить запись";fSnap=formState();openSheet()})}
+function newNote(reading){
+  return closeAll().then(function(ok){
+    if(!ok)return;
+    resetForm();
+    setEntrySection("note");
+    if(reading){refs=(reading.refs||[]).slice();drawRefs()}
+    fSnap=formState();
+    openSheet();
+  });
+}
+function startEdit(e){closeAll().then(function(ok){if(!ok)return;resetForm();setEntrySection(e.section);editId=e.id;$("fDate").value=e.date;$("fMin").value=e.min||"";$("fSec").value=e.sec||"";$("fKey").value=e.key||"";$("fNote").value=e.note||"";
+  refs=(e.refs||[]).slice();tags=(e.tags||[]).slice();drawRefs();drawTags();$("save").textContent="Сохранить изменения";$("fTitle").textContent=isNote(e)?"Изменить заметку":"Изменить запись о чтении";fSnap=formState();openSheet()})}
 $("cancel").onclick=function(){closeTop()};
 $("pickBtn").onclick=function(){openPicker({done:function(rs){rs.forEach(function(r){refs.push(r)});drawRefs();say("msg","")}})};
 $("typeReading").onclick=function(){openReadingInput({done:function(rs){refs.push(...rs);drawRefs();say("msg","")}})};
 $("save").onclick=function(){
-  addTag();
-  var e={id:editId||("e"+Date.now().toString(36)+Math.random().toString(36).slice(2,6)),date:$("fDate").value||todayStr(),min:$("fMin").value,sec:$("fSec").value,refs:refs.slice(),key:$("fKey").value.trim(),tags:tags.slice(),note:$("fNote").value.trim(),fav:false};
+  var note=entrySection==="note";
+  if(note)addTag();
+  var e={section:entrySection,id:editId||("e"+Date.now().toString(36)+Math.random().toString(36).slice(2,6)),date:$("fDate").value||todayStr(),min:note?"":$("fMin").value,sec:note?"":$("fSec").value,refs:refs.slice(),key:note?$("fKey").value.trim():"",tags:note?tags.slice():[],note:note?$("fNote").value.trim():"",fav:false};
   if(editId){var o=entries.find(function(x){return x.id===editId});if(o)e.fav=!!o.fav}
-  if(!e.refs.length&&!e.key&&!e.note){say("msg","Добавьте отрывок, мысль или заметку.");return}
-  var was=editId;if(entryTimer===tm){tm={acc:0,start:0};tSave();tShow()}putEntry(e);resetForm();closeModal($("fSheet"));toast(was?"Изменения сохранены":"Запись сохранена");tab("L")};
+  if(note?!e.key&&!e.note:!e.refs.length&&!secsOf(e)){
+    say("msg",note?"Добавьте заголовок или текст заметки.":"Укажите прочитанный отрывок или время чтения.");return;
+  }
+  var was=editId;if(entryTimer===tm){tm={acc:0,start:0};tSave();tShow()}putEntry(e);resetForm();closeModal($("fSheet"));toast(was?"Изменения сохранены":note?"Заметка сохранена":"Чтение сохранено");tab(note?"N":"L")};
 /* markup & refs */
 function fold(s){return String(s).replace(/[\s\S]/g,function(c){if(c==="İ"||c==="I"||c==="ı")return "i";var l=c.toLowerCase();return l.length===1?l:c})}
 var NUMW=["Birinci","İkinci","Üçüncü"],NM={},RX=(function(){var alts=[];
@@ -206,14 +258,36 @@ function setPreview(on){$("pv").hidden=!on;ta.hidden=on;$("pvBtn").textContent=o
   if(on){if(ta.value.trim())rich(ta.value,$("pv"));else{$("pv").innerHTML="";$("pv").appendChild(h("span","empty","Заметка пока пуста."))}}else grow()}
 $("pvBtn").onclick=function(){setPreview($("pv").hidden)};
 
-var flt={q:"",date:"",tag:"",book:"",ch:0,fav:false},openD={};
+function emptyFilters(){return {q:"",date:"",tag:"",book:"",ch:0,fav:false}}
+var listSection="L", listFilters={L:emptyFilters(),N:emptyFilters()},flt=listFilters.L,openD={L:{},N:{}};
+function setListSection(section){
+  listFilters[listSection]=flt;
+  listSection=section;
+  flt=listFilters[section];
+  var note=section==="N",tools=$("entryListTools"),panel=$("p"+section);
+  if(note)panel.appendChild(tools);
+  else panel.prepend(tools);
+  $("q").placeholder=note?"Поиск по заметкам, темам и отрывкам":"Поиск по прочитанным отрывкам";
+  $("filterTopic").hidden=$("noteTopics").hidden=!note;
+  say("showFiltered",note?"Показать заметки":"Показать записи");
+  syncF();
+}
 function fActive(){return !!(flt.q||flt.date||flt.tag||flt.book||flt.fav)}
 function fCount(){return (flt.date?1:0)+(flt.tag?1:0)+(flt.book?1:0)+(flt.fav?1:0)}
 function fillChSel(){var s=$("qCh"),b=BK[flt.book];s.innerHTML="";s.appendChild(new Option(b?"Все главы":"Сначала книга",""));
   if(b)for(var i=1;i<=b.c;i++)s.appendChild(new Option(i,i));s.value=b&&flt.ch?String(flt.ch):"";s.disabled=!b}
 function syncF(){$("q").value=flt.q;$("qDate").value=flt.date;$("qTag").value=flt.tag;$("qBook").value=flt.book;fillChSel();$("qFav").checked=flt.fav}
-function showPassage(b,c){closeAll().then(function(ok){if(!ok)return;flt={q:"",date:"",tag:"",book:b,ch:c,fav:false};syncF();tab("L")})}
-function setTag(t){closeAll().then(function(ok){if(!ok)return;flt.tag=t;syncF();if(curTab!=="L")tab("L");else render()})}
+function showPassage(b,c,section){
+  section=section||(curTab==="N"?"N":"L");
+  closeAll().then(function(ok){
+    if(!ok)return;
+    tab(section);
+    flt=Object.assign(emptyFilters(),{book:b,ch:c});
+    syncF();
+    renderList();
+  });
+}
+function setTag(t){closeAll().then(function(ok){if(!ok)return;tab("N");flt.tag=t;syncF();renderList()})}
 (function(){var s=$("qBook"),g1=document.createElement("optgroup"),g2=document.createElement("optgroup");g1.label="Əhdi-Ətiq";g2.label="Əhdi-Cədid";
   s.appendChild(new Option("Все книги",""));B.forEach(function(b,i){(i<39?g1:g2).appendChild(new Option(b.n,b.k))});s.appendChild(g1);s.appendChild(g2)})();
 $("q").addEventListener("input",function(){flt.q=this.value;render()});
@@ -243,21 +317,29 @@ function renderList(){
   renderChips();var fc=fCount(),bd=$("fltN");bd.hidden=!fc;bd.textContent=fc;$("fltBtn").setAttribute("aria-label","Фильтры"+(fc?", активно: "+fc:""));
   var list=$("list");list.innerHTML="";
   if(cloudLoading&&!entries.length){skel(list,4);say("found","Загрузка записей…");say("found2","");curList=[];return}
-  var f=entries.filter(match);f.sort(cmpDesc);curList=f;
-  var tot=f.reduce(function(a,e){return a+secsOf(e)},0),ft="Найдено записей: "+f.length+", время: "+(fmtSecs(tot).trim()||"0 мин");
+  var note=listSection==="N",items=entries.filter(function(e){return isNote(e)===note});
+  var f=items.filter(match);f.sort(cmpDesc);curList=f;
+  var tot=f.reduce(function(a,e){return a+secsOf(e)},0),ft=note?"Найдено заметок: "+f.length:"Найдено записей: "+f.length+", время: "+(fmtSecs(tot).trim()||"0 мин");
   say("found",ft);say("found2",ft);
-  if(!f.length){list.appendChild(entries.length?emptyState("search","Ничего не найдено.","Сбросить фильтры",resetFlt):emptyState("book","Записей пока нет. Добавьте первую — после чтения или прямо сейчас.","Новая запись",newEntry));return}
+  if(!f.length){
+    if(items.length)list.appendChild(emptyState("search","Ничего не найдено.","Сбросить фильтры",resetFlt));
+    else list.appendChild(emptyState("book",note?"Заметок пока нет.":"Записей о чтении пока нет."));
+    return;
+  }
   if(VIEW==="compact")listCompact(list,f);else if(VIEW==="timeline")listTimeline(list,f);else listCards(list,f)}
-function resetFlt(){flt={q:"",date:"",tag:"",book:"",ch:0,fav:false};syncF();render()}
+function resetFlt(){flt=emptyFilters();syncF();render()}
 function monthGroups(f){var groups=[],gi={};f.forEach(function(e){var k=e.date.slice(0,7);if(!(k in gi)){gi[k]=groups.length;groups.push({k:k,days:[],di:{},n:0,s:0})}var g=groups[gi[k]];
     if(!(e.date in g.di)){g.di[e.date]=g.days.length;g.days.push([])}g.days[g.di[e.date]].push(e);g.n++;g.s+=secsOf(e)});return groups}
-function listCards(list,f){var act=fActive();
+function listCards(list,f){var act=fActive(),section=listSection;
   monthGroups(f).forEach(function(g,idx){
     var d=h("details","month"),sm=h("summary","",monthName(g.k));
     sm.appendChild(h("small","",g.n+" зап."+(g.s?", "+fmtSecs(g.s):"")));d.appendChild(sm);
-    d.open=act||(g.k in openM?openM[g.k]:idx===0);
-    d.addEventListener("toggle",function(){if(!fActive())openM[g.k]=d.open});
-    g.days.forEach(function(es){d.appendChild(es.length>1?dayCard(es):swipeWrap(card(es[0]),es[0]))});list.appendChild(d)})}
+    d.open=act||(g.k in openM[listSection]?openM[listSection][g.k]:idx===0);
+    d.addEventListener("toggle",function(){if(!fActive())openM[section][g.k]=d.open});
+    g.days.forEach(function(es){
+      if(section==="L"&&es.length>1)d.appendChild(dayCard(es));
+      else es.forEach(function(e){d.appendChild(swipeWrap(card(e),e))});
+    });list.appendChild(d)})}
 function listCompact(list,f){monthGroups(f).forEach(function(g){var mh=h("div","ap-mh");mh.appendChild(h("span","",monthName(g.k)));mh.appendChild(h("small","",g.n+" зап."+(g.s?", "+fmtSecs(g.s):"")));list.appendChild(mh);
   g.days.forEach(function(es){es.forEach(function(e){list.appendChild(swipeWrap(rowEl(e),e,true))})})})}
 function rowEl(e){var r=h("div","ap-row entry-row");r.tabIndex=0;r.setAttribute("role","button");var a=e.date.split("-"),dt=new Date(+a[0],+a[1]-1,+a[2]);
@@ -303,9 +385,9 @@ function dayCard(es){
   var ks=h("div","keys"),kseen={};es.forEach(function(e){var k=keyOf(e);if(k.t&&!kseen[k.t]&&(kseen[k.t]=1))ks.appendChild(h("div","key"+(k.a?" auto":""),k.t))});if(ks.childNodes.length)c.appendChild(ks);
   var rl=[],ts=[];es.forEach(function(e){(e.refs||[]).forEach(function(r){var l=refLabel(r);if(rl.indexOf(l)<0)rl.push(l)});(e.tags||[]).forEach(function(t){if(ts.indexOf(t)<0)ts.push(t)})});
   if(rl.length)c.appendChild(h("div","refs",rl.join(", ")));if(ts.length)c.appendChild(tagChips(ts));
-  var a=h("div","acts"),b=h("button","btn sm",openD[day]?"Скрыть отдельные записи":"Показать отдельные записи"),box=h("div");b.type="button";b.setAttribute("aria-expanded",!!openD[day]);
-  box.hidden=!openD[day];es.forEach(function(e){box.appendChild(swipeWrap(card(e,true),e))});
-  b.onclick=function(){openD[day]=!openD[day];box.hidden=!openD[day];b.textContent=openD[day]?"Скрыть отдельные записи":"Показать отдельные записи";b.setAttribute("aria-expanded",!!openD[day])};
+  var opened=openD[listSection],a=h("div","acts"),b=h("button","btn sm",opened[day]?"Скрыть отдельные записи":"Показать отдельные записи"),box=h("div");b.type="button";b.setAttribute("aria-expanded",!!opened[day]);
+  box.hidden=!opened[day];es.forEach(function(e){box.appendChild(swipeWrap(card(e,true),e))});
+  b.onclick=function(){opened[day]=!opened[day];box.hidden=!opened[day];b.textContent=opened[day]?"Скрыть отдельные записи":"Показать отдельные записи";b.setAttribute("aria-expanded",!!opened[day])};
   a.appendChild(b);c.appendChild(a);c.appendChild(box);
   c.tabIndex=0;c.addEventListener("click",function(ev){if(ev.target.closest("button,a,summary")||swJust())return;openDetail(es[0].id,c)});
   c.addEventListener("keydown",function(ev){if(ev.target===c&&ev.key==="Enter"){ev.preventDefault();openDetail(es[0].id,c)}});return c}
@@ -336,14 +418,14 @@ function dstr(n){var d=new Date(n*864e5);return d.getUTCFullYear()+"-"+pad(d.get
 function fmtDay(s){var a=s.split("-");return new Date(+a[0],+a[1]-1,+a[2]).toLocaleDateString("ru-RU",{day:"numeric",month:"long",year:"numeric"}).replace(/\s*г\.?$/,"")}
 function wdOf(s){return (new Date(dnum(s)*864e5).getUTCDay()+6)%7}
 var MS=["янв","фев","мар","апр","май","июн","июл","авг","сен","окт","ноя","дек"],WD=["Пн","Вт","Ср","Чт","Пт","Сб","Вс"],WDF=["понедельник","вторник","среда","четверг","пятница","суббота","воскресенье"];
-function readMap(list){var m={};(list||entries).forEach(function(e){refChapters(e.refs).forEach(function(r){var b=BK[r.b],c=+r.c;if(b&&c>=1&&c<=b.c){(m[r.b]=m[r.b]||{})[c]=1}})});return m}
+function readMap(list){var m={};readingEntries(list).forEach(function(e){refChapters(e.refs).forEach(function(r){var b=BK[r.b],c=+r.c;if(b&&c>=1&&c<=b.c){(m[r.b]=m[r.b]||{})[c]=1}})});return m}
 function cntRead(m,from,to){var n=0;B.slice(from,to).forEach(function(b){n+=Object.keys(m[b.k]||{}).length});return n}
-function chOf(e){var s={};refChapters(e.refs).forEach(function(r){if(BK[r.b])s[r.b+" "+(+r.c)]=1});return Object.keys(s).length}
+function chOf(e){if(isNote(e))return 0;var s={};refChapters(e.refs).forEach(function(r){if(BK[r.b])s[r.b+" "+(+r.c)]=1});return Object.keys(s).length}
 function renderProg(){renderRings();renderTiles();renderHeat();renderCal();renderGoal();renderStats();renderAch()}
 function pct(a,b){return num(Math.floor(a/b*1000)/10)+" %"}
 
 /* 4.2 calendar */
-function byDate(){var o={};entries.forEach(function(e){(o[e.date]=o[e.date]||[]).push(e)});return o}
+function byDate(){var o={};readingEntries().forEach(function(e){(o[e.date]=o[e.date]||[]).push(e)});return o}
 $("calPrev").onclick=function(){var a=calM.split("-"),y=+a[0],m=+a[1]-1;if(m<1){m=12;y--}calM=y+"-"+pad(m);renderCal()};
 $("calNext").onclick=function(){var a=calM.split("-"),y=+a[0],m=+a[1]+1;if(m>12){m=1;y++}calM=y+"-"+pad(m);renderCal()};
 function renderCal(){var bd=byDate(),g=$("cal"),a=calM.split("-"),y=+a[0],mo=+a[1],first=calM+"-01",nd=new Date(y,mo,0).getDate(),off=wdOf(first),td=todayStr();
@@ -387,7 +469,7 @@ function setPart(k,v){var g={minutes:goal?goal.minutes:null,plan:goal?goal.plan:
 function renderProgIf(){if(curTab==="P")renderProg()}
 function un(t,n,acc){return n+" "+(t==="min"?(acc?plur(n,"минуту","минуты","минут"):plur(n,"минута","минуты","минут")):(acc?plur(n,"главу","главы","глав"):plur(n,"глава","главы","глав")))}
 function unG(t,n){var one=n%10===1&&n%100!==11;return n+" "+(t==="min"?(one?"минуты":"минут"):(one?"главы":"глав"))}
-function goalInfo(g,list,today){if(g.type==="plan")return planInfo(g,list,today);list=list||entries;today=today||todayStr();var n=+g.n,s=g.start,L=[],st,D=dnum(today)-dnum(s)+1;
+function goalInfo(g,list,today){if(g.type==="plan")return planInfo(g,list,today);list=readingEntries(list);today=today||todayStr();var n=+g.n,s=g.start,L=[],st,D=dnum(today)-dnum(s)+1;
   if(g.type==="bible"){var end=dstr(dnum(s)+n-1),m=readMap(list),rd=cntRead(m,0,66),rem=1189-rd,bar={v:rd,max:1189,mark:D>=1&&D<=n?Math.min(1189,Math.ceil(1189*D/n)):null,txt:rd+" из 1189 глав · "+pct(rd,1189)+(D>=1&&D<=n?" · по плану к концу дня: "+Math.min(1189,Math.ceil(1189*D/n))+" (черта)":"")};
     L.push("Цель: прочитать Библию за "+n+" "+plur(n,"день","дня","дней")+", с "+fmtDay(s)+" по "+fmtDay(end)+".");
     L.push("Прочитано "+rd+" из 1189 глав ("+pct(rd,1189)+"), осталось "+un("ch",rem)+".");
@@ -462,7 +544,7 @@ function bars(data,title,FW){var W=FW||Math.max(260,Math.min(720,($("stats").cli
     s.appendChild(svgEl("rect",{x:x,y:T,width:bw,height:ih,fill:"transparent","class":"hit","data-tip":d.f+": "+num(d.v)+" мин"}));
     if(i%step===(data.length-1)%step)s.appendChild(svgEl("text",{x:x+bw/2,y:H-8,"text-anchor":"middle","class":"ax"},d.l))});
   return s}
-function statsData(list,today){list=list||entries;today=today||todayStr();var T=dnum(today),wk={},mo={},wd=[0,0,0,0,0,0,0],days={},tot=0,first=null;
+function statsData(list,today){list=readingEntries(list);today=today||todayStr();var T=dnum(today),wk={},mo={},wd=[0,0,0,0,0,0,0],days={},tot=0,first=null;
   list.forEach(function(e){var s=secsOf(e);days[e.date]=1;if(!first||e.date<first)first=e.date;tot+=s;var dn=dnum(e.date),ws=dn-wdOf(e.date);wk[ws]=(wk[ws]||0)+s;mo[e.date.slice(0,7)]=(mo[e.date.slice(0,7)]||0)+s;wd[wdOf(e.date)]+=s});
   var cw=T-wdOf(today),W=[],M=[],a=today.split("-"),y=+a[0],m=+a[1];
   for(var i=11;i>=0;i--){var ws=cw-7*i,ds=dstr(ws);W.push({l:ds.slice(8)+"."+ds.slice(5,7),f:"Неделя с "+fmtDay(ds),v:(wk[ws]||0)/60})}
@@ -494,7 +576,7 @@ function renderYB(){var ys=ybYears(),cur=todayStr().slice(0,4),sel=$("ybYear");i
   if(!ybYear||ys.indexOf(ybYear)<0)ybYear=ys.indexOf(cur)>=0?cur:ys[0];
   sel.innerHTML="";ys.forEach(function(y){sel.appendChild(new Option(y,y))});sel.value=ybYear;
   var bk=$("ybBook"),E=ybEntries(ybYear);bk.innerHTML="";$("ybPrint").disabled=$("ybDl").disabled=!E.length;
-  if(!E.length){bk.appendChild(h("p","yb-empty","За "+ybYear+" год записей пока нет. Добавьте записи во вкладке «Читать» — здесь появится книга года."));return}
+  if(!E.length){bk.appendChild(h("p","yb-empty","За "+ybYear+" год записей пока нет. Отметьте чтение или добавьте заметку, чтобы собрать книгу года."));return}
   buildBook(ybYear,E,bk)}
 function ybEntries(y){return entries.filter(function(e){return (e.date||"").slice(0,4)===y}).sort(function(a,b){return a.date<b.date?-1:a.date>b.date?1:(a.id<b.id?-1:1)})}
 $("ybYear").onchange=function(){ybYear=this.value;renderYB()};
@@ -507,14 +589,15 @@ function ybEntry(e){var d=h("div","yb-e"),top=h("div","yb-d"),r=h("span");top.ap
   if(e.note)d.appendChild(ybNote(e.note));return d}
 function ybRows(dl,rows){rows.forEach(function(r){dl.appendChild(h("dt","",r[0]));dl.appendChild(h("dd","",r[1]))})}
 function buildBook(y,E,root){
-  var tot=0,days={},mo=[0,0,0,0,0,0,0,0,0,0,0,0],fav=E.filter(function(e){return e.fav});
-  E.forEach(function(e){var s=secsOf(e);tot+=s;days[e.date]=1;mo[+e.date.slice(5,7)-1]+=s});
+  var readings=readingEntries(E),notes=E.filter(isNote);
+  var tot=0,days={},mo=[0,0,0,0,0,0,0,0,0,0,0,0],fav=readings.filter(function(e){return e.fav});
+  readings.forEach(function(e){var s=secsOf(e);tot+=s;days[e.date]=1;mo[+e.date.slice(5,7)-1]+=s});
   var nd=Object.keys(days).length,m=readMap(E),ot=cntRead(m,0,39),nt=cntRead(m,39,66),all=ot+nt,T=function(s){return fmtSecs(Math.round(s)).trim()||"0 мин"};
   var tp=h("div","yb-title");tp.appendChild(h("p","yb-h","Дневник чтения Библии"));tp.appendChild(h("p","yb-yr",y));
   tp.appendChild(h("p","yb-s","Müqəddəs Kitab, Azərbaycan dilində"));tp.appendChild(h("p","yb-s","Записи с "+fmtDay(E[0].date)+" по "+fmtDay(E[E.length-1].date)));root.appendChild(tp);
   var st=h("div","yb-sec yb-stats");st.appendChild(h("h2","","Итоги "+y+" года"));var dl=h("dl","yb-st");
   var bm=mo.indexOf(Math.max.apply(null,mo));
-  ybRows(dl,[["Записей",String(E.length)],["Дней чтения",String(nd)],["Общее время",T(tot)],["В среднем за день чтения",T(nd?tot/nd:0)],
+  ybRows(dl,[["Записей о чтении",String(readings.length)],["Дней чтения",String(nd)],["Общее время",T(tot)],["В среднем за день чтения",T(nd?tot/nd:0)],
     ["Прочитано глав",all+" из 1189 ("+pct(all,1189)+")"],["Əhdi-Ətiq",ot+" из 929 ("+pct(ot,929)+")"],["Əhdi-Cədid",nt+" из 260 ("+pct(nt,260)+")"],
     ["Избранных записей",String(fav.length)],["Самый активный месяц",tot?monthName(y+"-"+pad(bm+1)).split(" ")[0]+" ("+T(mo[bm])+")":"—"]]);
   st.appendChild(dl);st.appendChild(h("h3","","Минуты по месяцам"));
@@ -528,9 +611,15 @@ function buildBook(y,E,root){
   root.appendChild(mp);
   var fv=h("div","yb-sec yb-favs");fv.appendChild(h("h2","","Избранные записи"));
   if(fav.length)fav.forEach(function(e){fv.appendChild(ybEntry(e))});else fv.appendChild(h("p","yb-empty","В этом году избранных записей нет."));root.appendChild(fv);
-  var gs={},order=[];E.forEach(function(e){var k=e.date.slice(0,7);if(!gs[k]){gs[k]=[];order.push(k)}gs[k].push(e)});
+  var gs={},order=[];readings.forEach(function(e){var k=e.date.slice(0,7);if(!gs[k]){gs[k]=[];order.push(k)}gs[k].push(e)});
   order.forEach(function(k){var s=h("div","yb-sec yb-month"),hh=h("h2","",monthName(k)),ms=gs[k].reduce(function(a,e){return a+secsOf(e)},0);
     hh.appendChild(h("small","",gs[k].length+" зап."+(ms?", "+T(ms):"")));s.appendChild(hh);gs[k].forEach(function(e){s.appendChild(ybEntry(e))});root.appendChild(s)});
+  if(notes.length){
+    var notebook=h("div","yb-sec yb-month");
+    notebook.appendChild(h("h2","","Заметки из блокнота"));
+    notes.forEach(function(e){notebook.appendChild(ybEntry(e))});
+    root.appendChild(notebook);
+  }
   return root}
 $("ybPrint").onclick=function(){if(!$("ybBook").childNodes.length)renderYB();try{window.print()}catch(e){say("ybMsg","Печать недоступна в этом окне. Скачайте книгу как HTML и напечатайте из браузера.")}};
 window.addEventListener("beforeprint",function(){if(!$("ybBook").querySelector(".yb-title"))renderYB()});
@@ -556,7 +645,7 @@ $("file").onchange=function(){var f=this.files[0];if(!f)return;var r=new FileRea
     var gm="";if(j&&j.goal){var gr=normGoal(j.goal),gmsg=[];if(gr.g){var cur={minutes:goal?goal.minutes:null,plan:goal?goal.plan:null},chg=false;
         [["minutes","«Минуты в день»"],["plan","план чтения"]].forEach(function(x){if(gr.g[x[0]]){if(!cur[x[0]]){cur[x[0]]=gr.g[x[0]];chg=true;gmsg.push(x[1]+" — установлено")}else gmsg.push(x[1]+" — не применено: у вас уже есть такая цель")}});if(chg)saveGoal(cur)}
       if(gr.drop)gmsg.push("цель «"+gr.drop+"» не перенесена: такой тип цели больше не поддерживается");if(gmsg.length)gm=" Цели из копии: "+gmsg.join("; ")+"."}
-    a.forEach(function(e){if(e&&e.id&&String(e.id)!=="goal"&&/^\d{4}-\d{2}-\d{2}$/.test(e.date||"")){putEntry({id:String(e.id),date:e.date,min:e.min||"",sec:e.sec||"",refs:Array.isArray(e.refs)?e.refs:[],key:String(e.key||""),tags:Array.isArray(e.tags)?e.tags:[],note:String(e.note||""),fav:!!e.fav,updatedAt:+e.updatedAt||0,_imp:1});n++}});
+    a.forEach(function(e){if(e&&e.id&&String(e.id)!=="goal"&&/^\d{4}-\d{2}-\d{2}$/.test(e.date||"")){saveMany(splitLegacyEntries([{id:String(e.id),section:e.section,date:e.date,min:e.min||"",sec:e.sec||"",refs:Array.isArray(e.refs)?e.refs:[],key:String(e.key||""),tags:Array.isArray(e.tags)?e.tags:[],note:String(e.note||""),fav:!!e.fav,updatedAt:+e.updatedAt||0,_imp:1}]));n++}});
     say("bmsg","Загружено записей: "+n+"."+gm)}catch(x){say("bmsg","Файл не подходит: нужна копия, скачанная из этого дневника.")}};
   r.readAsText(f);this.value=""};
 

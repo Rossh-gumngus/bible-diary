@@ -22,7 +22,7 @@ function syLocal(){var ach=[];try{ach=JSON.parse(localStorage.getItem("bd6-ach")
 function syPick(a,b){var x=+a.updatedAt||0,y=+b.updatedAt||0;if(x!==y)return x>y?a:b;var s=JSON.stringify(a),t=JSON.stringify(b);return s>=t?a:b}
 function syMerge(L,R){var map={},tombs={},cut=Date.now()-400*864e5;
   [L.tombs||{},R.tombs||{}].forEach(function(t){Object.keys(t).forEach(function(id){var v=+t[id]||0;if(v>(tombs[id]||0))tombs[id]=v})});
-  [L.entries||[],R.entries||[]].forEach(function(l){l.forEach(function(e){if(!e||!e.id)return;map[e.id]=map[e.id]?syPick(map[e.id],e):e})});
+  [L.entries||[],R.entries||[]].forEach(function(l){splitLegacyEntries(l).forEach(function(e){map[e.id]=map[e.id]?syPick(map[e.id],e):e})});
   var out=[];Object.keys(map).forEach(function(id){var e=map[id];if(tombs[id]!=null&&tombs[id]>=(+e.updatedAt||0))return;delete tombs[id];out.push(e)});
   Object.keys(tombs).forEach(function(id){if(tombs[id]<cut)delete tombs[id]});
   var lg=L.goal||{value:null,updatedAt:0},rg=R.goal||{value:null,updatedAt:0},g;

@@ -240,7 +240,7 @@ button.ap-ring{cursor:pointer}
 @media print{
 :root{--bg:#fff!important;--paper:#fff!important;--ink:#1c2733!important;--mute:#5d6b76!important;--rule:#c5cdc8!important;--accent:#1d5b78!important;--onacc:#fff!important;--warm:#a8742a!important;color-scheme:light!important}
 html,body{background:#fff!important;color:#1c2733!important;padding:0!important}
-.ap-hdr,.ap-nav,.ap-fab,.ap-toasts,#ovRoot,.ap-tip,#pW,#pL,#pP,.yb-ctl,#pY>.hint,#ybMsg,button{display:none!important}
+.ap-hdr,.ap-nav,.ap-fab,.ap-toasts,#ovRoot,.ap-tip,#pW,#pL,#pN,#pP,.yb-ctl,#pY>.hint,#ybMsg,button{display:none!important}
 .ap-main{max-width:none;padding:0!important;margin:0}
 #pY,#pY[hidden]{display:block!important;border:0;padding:0;background:none;border-radius:0;animation:none}
 #ybBook{border:0;margin:0}

@@ -46,8 +46,9 @@ function toast(t,o){o=o||{};var box=$("toasts"),el=h("div","ap-toast"+(o.cls?" "
 
 /* --- sheet, filters --- */
 function sheetOpen(){return !!findM($("fSheet"))}
-function openSheet(){openModal($("fSheet"),{variant:"sheet",label:"fTitle",keep:true,guard:function(){return formState()!==fSnap},onOpen:function(){grow();$("fSheet").querySelector(".ap-db").scrollTop=0}})}
-$("fab").onclick=newEntry;$("newBtn").onclick=newEntry;
+function openSheet(){openModal($("fSheet"),{variant:"sheet",label:"fTitle",keep:true,guard:function(){return formState()!==fSnap},onOpen:function(){if(entrySection==="note")grow();$("fSheet").querySelector(".ap-db").scrollTop=0}})}
+$("fab").onclick=function(){if(curTab==="N")newNote();else newEntry()};$("newBtn").onclick=newEntry;
+$("newNoteBtn").onclick=function(){newNote()};
 $("fltBtn").onclick=function(){openModal($("fltPanel"),{variant:"side",label:"fltTitle",keep:true})};
 $("qCh").addEventListener("change",function(){flt.ch=+this.value||0;render()});
 
@@ -84,14 +85,15 @@ function emptyState(kind,text,btn,fn){var d=h("div","ap-empty");d.appendChild(sv
 /* --- recent on «Читать» --- */
 function renderRecent(){var box=$("recent");box.innerHTML="";
   if(cloudLoading&&!entries.length){skel(box,2);return}
-  var f=entries.slice().sort(cmpDesc);
-  if(!f.length){box.appendChild(emptyState("book","Здесь появятся ваши последние записи.","Добавить первую запись",newEntry));return}
+  var f=readingEntries().sort(cmpDesc);
+  if(!f.length){box.appendChild(emptyState("book","Здесь появится история чтения.","Отметить чтение",newEntry));return}
   f.slice(0,3).forEach(function(e){box.appendChild(swipeWrap(card(e),e))});
-  if(f.length>3){var b=h("button","btn sm","Все записи ("+f.length+") ›");b.type="button";b.onclick=function(){tab("L")};box.appendChild(b)}}
+  if(f.length>3){var b=h("button","btn sm","Дневник ("+f.length+") ›");b.type="button";b.onclick=function(){tab("L")};box.appendChild(b)}}
 
 /* --- detail --- */
 var det=null;
-function openDetail(id,from){var list=(curList.some(function(x){return x.id===id})?curList:entries.slice().sort(cmpDesc)).map(function(x){return x.id});
+function openDetail(id,from){var current=entries.find(function(e){return e.id===id});if(!current)return;
+  var list=(curList.some(function(x){return x.id===id})?curList:entries.filter(function(e){return isNote(e)===isNote(current)}).sort(cmpDesc)).map(function(x){return x.id});
   if(det){det.id=id;det.list=list;renderDetail();return}
   var box=h("div","ap-dm"),hd=h("div","ap-dh"),t=h("h2","ap-dt");t.id="dtT";hd.appendChild(t);var x=h("button","ap-x","×");x.type="button";x.setAttribute("aria-label","Закрыть");x.setAttribute("data-close","");hd.appendChild(x);box.appendChild(hd);
   var bd=h("div","ap-db");bd.style.touchAction="pan-y";box.appendChild(bd);
@@ -106,13 +108,20 @@ function detIds(){return det.list.filter(function(id){return entries.some(functi
 function detGo(d){if(!det)return;var ids=detIds(),i=ids.indexOf(det.id),j=i+d;if(j<0||j>=ids.length)return;det.id=ids[j];renderDetail();det.bd.scrollTop=0;(d<0?det.pv:det.nx).disabled||(d<0?det.pv:det.nx).focus()}
 function renderDetail(){if(!det)return;var e=entries.find(function(x){return x.id===det.id});if(!e){if(det.m)closeModal(det.m);return}
   var ids=detIds(),i=ids.indexOf(e.id),bd=det.bd;det.t.textContent=fmtDate(e.date);bd.innerHTML="";
-  var mt=h("div","ap-dmeta"),tt=fmtSecs(secsOf(e)).trim();mt.appendChild(h("span","",tt?"Время чтения: "+tt:"Время не отмечено"));mt.appendChild(favBtn(e));bd.appendChild(mt);
+  var mt=h("div","ap-dmeta"),tt=fmtSecs(secsOf(e)).trim();if(!isNote(e))mt.appendChild(h("span","",tt?"Время чтения: "+tt:"Время не отмечено"));mt.appendChild(favBtn(e));bd.appendChild(mt);
   if(e.key)bd.appendChild(h("p","ap-dkey",e.key));
-  if(e.refs&&e.refs.length){var rf=h("div","refs");e.refs.forEach(function(r,k){if(k)rf.appendChild(document.createTextNode(", "));if(r.to){rf.appendChild(document.createTextNode(refLabel(r)));return}var b=h("button","",refLabel(r));b.type="button";b.title="Все записи по главе "+(BK[r.b]?BK[r.b].n:r.b)+" "+r.c;b.onclick=function(){if(BK[r.b])showPassage(r.b,+r.c)};rf.appendChild(b)});bd.appendChild(rf)}
+  if(e.refs&&e.refs.length){var rf=h("div","refs");e.refs.forEach(function(r,k){if(k)rf.appendChild(document.createTextNode(", "));if(r.to){rf.appendChild(document.createTextNode(refLabel(r)));return}var b=h("button","",refLabel(r));b.type="button";b.title="Все записи по главе "+(BK[r.b]?BK[r.b].n:r.b)+" "+r.c;b.onclick=function(){if(BK[r.b])showPassage(r.b,+r.c,isNote(e)?"N":"L")};rf.appendChild(b)});bd.appendChild(rf)}
   if(e.tags&&e.tags.length)bd.appendChild(tagChips(e.tags));
   if(e.note){var o=h("div","ap-orn");o.appendChild(h("span","","◆"));o.setAttribute("aria-hidden","true");bd.appendChild(o);bd.appendChild(rich(e.note))}
   if(!e.key&&!e.note&&!(e.refs||[]).length)bd.appendChild(h("p","empty","Запись пуста."));
-  var a=h("div","acts"),b1=h("button","btn sm","Изменить"),b2=h("button","btn sm","Удалить");b1.type=b2.type="button";b1.onclick=function(){startEdit(e)};b2.onclick=function(){askDelete(e)};a.appendChild(b1);a.appendChild(b2);a.style.marginTop="16px";bd.appendChild(a);
+  var a=h("div","acts"),b1=h("button","btn sm","Изменить"),b2=h("button","btn sm","Удалить");b1.type=b2.type="button";b1.onclick=function(){startEdit(e)};b2.onclick=function(){askDelete(e)};a.appendChild(b1);a.appendChild(b2);
+  if(!isNote(e)&&e.refs&&e.refs.length){
+    var noteButton=h("button","btn sm","Заметка к отрывку");
+    noteButton.type="button";
+    noteButton.onclick=function(){newNote(e)};
+    a.appendChild(noteButton);
+  }
+  a.style.marginTop="16px";bd.appendChild(a);
   det.pv.disabled=i<=0;det.nx.disabled=i<0||i>=ids.length-1;det.cn.textContent=i>=0?(i+1)+" из "+ids.length:""}
 
 /* --- passage picker --- */
@@ -239,7 +248,7 @@ $("themeBtn").onclick=function(){var t={system:"light",light:"dark",dark:"system
 themeApply(themeCur());
 
 /* --- header --- */
-function streak(){var d={};entries.forEach(function(e){if(e.date)d[e.date]=1});var t=dnum(todayStr());if(!d[dstr(t)])t--;var n=0;while(d[dstr(t)]){n++;t--}return n}
+function streak(){var d={};readingEntries().forEach(function(e){if(e.date)d[e.date]=1});var t=dnum(todayStr());if(!d[dstr(t)])t--;var n=0;while(d[dstr(t)]){n++;t--}return n}
 function renderHdr(){var s=streak(),el=$("hStreak");el.hidden=!s;$("hStreakT").textContent=s+" "+plur(s,"день","дня","дней");el.title="Дней подряд с записями: "+s;el.setAttribute("aria-label",el.title);
   /* мини-кольцо в шапке: одна цель — одно кольцо с процентом; обе — два концентрических кольца (внешнее — минуты сегодня, внутреннее — план), без числа */
   var hg=$("hGoal"),M=MG(),P=PG();hg.hidden=!M&&!P;if(!M&&!P)return;
@@ -329,9 +338,9 @@ var ACH=[["first","Первая запись","Дневник начат",functi
   ["bible","Вся Библия","Все 1189 глав",function(s){return [s.ot+s.nt,1189]},"M5 3h11a3 3 0 0 1 3 3v15H8a3 3 0 0 1-3-3zM5 18a3 3 0 0 1 3-3h11M12 6v6M9.5 8.5h5"],
   ["h10","10 часов чтения","Суммарное время по записям",function(s){return [Math.floor(s.secs/3600),10]},"M12 7v5l3 2M12 3a9 9 0 1 1 0 18 9 9 0 0 1 0-18z"],
   ["d30","30 дней чтения","Дни с записями, не обязательно подряд",function(s){return [s.nd,30]},"M4 6h16v14H4zM4 10h16M8 3v5M16 3v5"]];
-function achStats(){var m=readMap(),s={n:entries.length,ot:cntRead(m,0,39),nt:cntRead(m,39,66),books:0,secs:0,nd:0,gosp:0,pent:0,psa:Object.keys(m.PSA||{}).length},d={};
+function achStats(){var list=readingEntries(),m=readMap(list),s={n:list.length,ot:cntRead(m,0,39),nt:cntRead(m,39,66),books:0,secs:0,nd:0,gosp:0,pent:0,psa:Object.keys(m.PSA||{}).length},d={};
   B.forEach(function(b,i){var n=Object.keys(m[b.k]||{}).length;if(n===b.c)s.books++;if(i<5)s.pent+=n;if(i>=39&&i<43)s.gosp+=n});
-  entries.forEach(function(e){s.secs+=secsOf(e);if(e.date)d[e.date]=1});s.nd=Object.keys(d).length;return s}
+  list.forEach(function(e){s.secs+=secsOf(e);if(e.date)d[e.date]=1});s.nd=Object.keys(d).length;return s}
 function achList(){var s=achStats();return ACH.map(function(a){var p=a[3](s);return {id:a[0],t:a[1],d:a[2],v:Math.min(p[0],p[1]),max:p[1],on:p[0]>=p[1],ic:a[4]}})}
 function achCheck(){if(!dataReady)return;var L=achList(),on=L.filter(function(a){return a.on}).map(function(a){return a.id}),st=null;
   try{st=JSON.parse(localStorage.getItem("bd6-ach")||"null")}catch(e){}
