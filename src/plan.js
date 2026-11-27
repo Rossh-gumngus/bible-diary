@@ -15,7 +15,7 @@ function planDate(g,n){return dstr(dnum(g.start)+n-1)}
 function shortDay(s){var a=s.split("-");return (+a[2])+" "+MS[+a[1]-1]}
 /* выполнено = есть запись с датой не раньше старта плана, где указана эта глава (для части главы — пересекающиеся стихи или вся глава) */
 function planState(g,list,today){var p=PLAN[g.plan],days=planDays(p),N=days.length,s=g.start,D=dnum(today||todayStr())-dnum(s)+1,idx={};
-  (list||entries).forEach(function(e){if((e.date||"")>=s)(e.refs||[]).forEach(function(r){var k=r.b+" "+(+r.c);(idx[k]=idx[k]||[]).push(String(r.v||""))})});
+  (list||entries).forEach(function(e){if((e.date||"")>=s)refChapters(e.refs).forEach(function(r){var k=r.b+" "+(+r.c);(idx[k]=idx[k]||[]).push(String(r.v||""))})});
   function isDone1(it){var l=idx[it.b+" "+it.c];if(!l)return false;if(!it.v)return true;return l.some(function(v){return !v||vOverlap(v,it.v)})}
   function isDone(it){return it.parts?it.parts.every(isDone1):isDone1(it)}
   var mk=days.map(function(d){return d.map(isDone)}),total=0,done=0,dueN=0,dueY=0,k=0,pref=true,firstUndone=0;
@@ -45,7 +45,15 @@ function chkList(items,marks){var ul=h("ul","ap-chk");items.forEach(function(it,
   var sr=h("span","ap-sr",marks[i]?", прочитано":", не прочитано");li.appendChild(sr);ul.appendChild(li)});return ul}
 function pbar(b){var w=h("div","gcb ap-pb");w.setAttribute("role","progressbar");w.setAttribute("aria-valuemin","0");w.setAttribute("aria-valuemax",String(b.max));w.setAttribute("aria-valuenow",String(b.v));w.setAttribute("aria-valuetext",b.txt);
   var f=h("div");f.style.width=(b.max?Math.min(100,b.v/b.max*100):0)+"%";w.appendChild(f);if(b.mark!=null){var m=h("span");m.style.left=Math.min(100,b.mark/b.max*100)+"%";m.title="По плану к концу дня: "+b.mark;w.appendChild(m)}return w}
-function newEntryWith(rs){if(sheetOpen())return;resetForm();if(!tm.start)fillTime();refs=[];rs.forEach(function(r){(r.parts||[r]).forEach(function(q){refs.push({b:q.b,c:q.c,v:q.v||""})})});drawRefs();fSnap=formState();openSheet()}
+function newEntryWith(rs){if(sheetOpen())return;resetForm();rs.forEach(function(r){
+  var parts=r.parts||[r],first=parts[0],last=parts[parts.length-1];
+  var ref={b:first.b,c:first.c,v:first.v||""};
+  if(parts.length>1){
+    ref.v=first.v.split("-")[0];
+    ref.to={b:last.b,c:last.c,v:last.v.split("-").pop()};
+  }
+  refs.push(ref);
+});drawRefs();fSnap=formState();openSheet()}
 function planView(full){var G=PG(),gi=planInfo(G),ps=gi.ps,D=ps.D,c=h("div","ap-plan ap-card "+gi.st);
   var hd=h("div","ap-plh");hd.appendChild(h("span","ap-plt",ps.p.t));hd.appendChild(h("span","ap-pld",D>=1&&D<=ps.N?"день "+D+" из "+ps.N:D<1?"старт "+fmtDay(G.start):"срок закончился"));c.appendChild(hd);
   c.appendChild(pbar(gi.bar));c.appendChild(h("div","gcn",gi.bar.txt));

@@ -33,7 +33,7 @@
     <div id="planW" hidden></div>
     <div class="ap-card ap-timer">
       <div class="ap-tl1"><span class="ap-lbl">Таймер чтения</span><span class="ap-clk" id="clk">00:00:00</span></div>
-      <div class="ap-tbtns"><button class="btn ap-pri" type="button" id="tStart" data-tstart>Старт</button><button class="btn" type="button" id="tReset">Сбросить</button><button class="btn" type="button" id="focusBtn">Режим чтения</button></div>
+      <div class="ap-tbtns"><button class="btn ap-pri" type="button" id="tStart" data-tstart>Старт</button><button class="btn" type="button" id="tReset">Сбросить</button><button class="btn" type="button" id="focusBtn">Режим чтения</button><button class="btn" type="button" id="tDone">Завершить чтение</button></div>
     </div>
     <button class="ap-cta" type="button" id="newBtn"><span aria-hidden="true">+</span> Новая запись</button>
     <h2 class="ap-h2 ap-rh"><svg class="ap-leaf" viewBox="0 0 32 32" aria-hidden="true"><path d="M6 26C6 14 14 6 26 6c0 12-8 20-20 20zM6 26L19 13"/></svg>Последние записи</h2>
@@ -130,7 +130,6 @@
   <div class="ap-form" id="fSheet">
     <div class="ap-dh"><h2 class="ap-dt" id="fTitle">Новая запись</h2><button type="button" class="ap-x" data-close aria-label="Закрыть">×</button></div>
     <div class="ap-db">
-      <div class="ap-trow"><span class="ap-clk" id="clk2">00:00:00</span><button class="btn sm" type="button" id="tStart2" data-tstart>Старт</button><button class="btn sm" type="button" id="focusBtn2">Режим чтения</button></div>
       <div class="row wrapm">
         <div><label for="fDate">Дата</label><input type="date" id="fDate"></div>
         <div><label for="fMin">Минуты</label><input type="number" id="fMin" min="0" inputmode="numeric"></div>
@@ -138,7 +137,10 @@
       </div>
       <label>Что прочитано</label>
       <div class="chips" id="refs"></div>
-      <button type="button" class="btn ap-pick" id="pickBtn"><span aria-hidden="true">+</span> Выбрать отрывок</button>
+      <div class="acts">
+        <button type="button" class="btn ap-pick" id="typeReading">Ввести отрывки</button>
+        <button type="button" class="btn ap-pick" id="pickBtn">Выбрать по главам</button>
+      </div>
       <label for="fKey">Главная мысль или стих дня</label>
       <input type="text" id="fKey">
       <label for="fTag">Темы (Enter после каждой)</label>

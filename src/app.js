@@ -22,7 +22,61 @@ function todayStr(){var d=new Date();return d.getFullYear()+"-"+pad(d.getMonth()
 function fmtDate(s){var a=s.split("-");return new Date(+a[0],+a[1]-1,+a[2]).toLocaleDateString("ru-RU",{weekday:"short",day:"numeric",month:"long",year:"numeric"})}
 function secsOf(e){return (+e.min||0)*60+(+e.sec||0)}
 function fmtSecs(s){var H=Math.floor(s/3600),M=Math.floor(s%3600/60),S=s%60;return (H?H+" ч ":"")+(M?M+" мин ":"")+(S&&!H?S+" сек":"")}
-function refLabel(r){var b=BK[r.b],mx=b?maxV(r.b,+r.c):0;return (b?b.n:r.b)+" "+r.c+(r.v?":"+r.v:mx?":1-"+mx:"")}
+var RU = "Бытие;Исход;Левит;Числа;Второзаконие;Иисус Навин;Судьи;Руфь;1 Царств;2 Царств;3 Царств;4 Царств;1 Паралипоменон;2 Паралипоменон;Ездра;Неемия;Есфирь;Иов;Псалтирь;Притчи;Екклесиаст;Песнь Песней;Исаия;Иеремия;Плач Иеремии;Иезекииль;Даниил;Осия;Иоиль;Амос;Авдий;Иона;Михей;Наум;Аввакум;Софония;Аггей;Захария;Малахия;Матфея;Марка;Луки;Иоанна;Деяния;Римлянам;1 Коринфянам;2 Коринфянам;Галатам;Ефесянам;Филиппийцам;Колоссянам;1 Фессалоникийцам;2 Фессалоникийцам;1 Тимофею;2 Тимофею;Титу;Филимону;Евреям;Иакова;1 Петра;2 Петра;1 Иоанна;2 Иоанна;3 Иоанна;Иуды;Откровение".split(";");
+var refBooks = Object.create(null);
+B.forEach(function(book, i){
+  book.ru = RU[i];
+  book.order = i;
+  refBooks[fold(book.n)] = {b:book.k, ru:false};
+  if(fold(book.ru)!==fold(book.n))refBooks[fold(book.ru)] = {b:book.k, ru:true};
+});
+function refPoint(text, fallback){
+  var m = text.trim().match(/^(?:(.+?)\s+)?(\d{1,3}):(\d{1,3})$/);
+  if(!m)return null;
+  var book = m[1] ? refBooks[fold(m[1].replace(/\s+/g," "))] : fallback;
+  if(!book || +m[3]<1 || +m[3]>maxV(book.b,+m[2]))return null;
+  return {b:book.b,c:+m[2],v:String(+m[3]),ru:book.ru};
+}
+function parseReading(text){
+  var out = [];
+  for(var item of text.trim().split(/[,;\n]+/)){
+    var ends = item.split(/[-–—]/);
+    var from = refPoint(ends[0]);
+    if(!from || ends.length>2)return null;
+    if(ends.length===2){
+      var last = ends[1].trim();
+      var to = refPoint(/^\d{1,3}$/.test(last) ? from.c+":"+last : last, from);
+      if(!to || BK[to.b].order<BK[from.b].order ||
+        (to.b===from.b && (to.c<from.c || (to.c===from.c && +to.v<+from.v))))return null;
+      if(to.b!==from.b || to.c!==from.c)from.to = to;
+      else if(to.v!==from.v)from.v += "-"+to.v;
+    }
+    out.push(from);
+  }
+  return out;
+}
+function refLabel(r){
+  var b=BK[r.b],mx=b?maxV(r.b,+r.c):0;
+  var label=(b?(r.ru?b.ru:b.n):r.b)+" "+r.c+(r.v?":"+r.v:mx?":1-"+mx:"");
+  return r.to ? label+" - "+refLabel(r.to) : label;
+}
+function refChapters(refs){
+  var chapters=[];
+  (refs||[]).forEach(function(r){
+    if(!r.to){chapters.push(r);return}
+    var a=BK[r.b],z=BK[r.to.b];
+    if(!a||!z||!maxV(r.b,+r.c)||!maxV(r.to.b,+r.to.c))return;
+    for(var i=a.order;i<=z.order;i++){
+      var book=B[i];
+      for(var c=book===a?+r.c:1;c<=(book===z?+r.to.c:book.c);c++){
+        var start=book===a&&c===+r.c?+r.v:1;
+        var end=book===z&&c===+r.to.c?+r.to.v:maxV(book.k,c);
+        chapters.push({b:book.k,c:c,v:start===end?String(start):start+"-"+end});
+      }
+    }
+  });
+  return chapters;
+}
 function monthName(k){var a=k.split("-");return ["Январь","Февраль","Март","Апрель","Май","Июнь","Июль","Август","Сентябрь","Октябрь","Ноябрь","Декабрь"][+a[1]-1]+" "+a[0]}
 function say(id,t){$(id).textContent=t}
 var curTab="W",cloudLoading=false,dataReady=false;
@@ -41,7 +95,7 @@ window.addEventListener("resize",moveInd);
 function chip(list,i,cls,txt,redraw){var c=h("span","chip "+cls);c.appendChild(h("span","",txt));var b=h("button","","×");b.type="button";b.setAttribute("aria-label","Убрать");b.onclick=function(){list.splice(i,1);redraw()};c.appendChild(b);return c}
 function drawRefs(){var d=$("refs");d.innerHTML="";refs.forEach(function(r,i){var c=chip(refs,i,"",refLabel(r),drawRefs),s=c.firstChild,b=h("button","ap-cref",s.textContent);b.type="button";b.title="Изменить отрывок";b.setAttribute("aria-label","Изменить отрывок "+s.textContent);
   /* нажатие на отрывок открывает выбор стихов с текущим диапазоном; полная глава показывается с активной «Вся глава» */
-  b.onclick=function(){openPicker({title:"Изменить отрывок",init:r,done:function(rs){Array.prototype.splice.apply(refs,[i,1].concat(rs));drawRefs();say("msg","")}})};c.replaceChild(b,s);d.appendChild(c)})}
+  b.onclick=function(){var options={title:"Изменить отрывок",init:r,done:function(rs){refs.splice(i,1,...rs);drawRefs();say("msg","")}};if(r.to||r.ru)openReadingInput(options);else openPicker(options)};c.replaceChild(b,s);d.appendChild(c)})}
 function drawTags(){var d=$("tags");d.innerHTML="";tags.forEach(function(t,i){d.appendChild(chip(tags,i,"tag",t,drawTags))})}
 function addTag(){var t=$("fTag").value.replace(/,/g," ").trim();if(t&&tags.indexOf(t)<0){tags.push(t);drawTags()}$("fTag").value=""}
 $("fTag").addEventListener("keydown",function(e){if(e.key==="Enter"||e.key===","){e.preventDefault();addTag()}});
@@ -74,21 +128,28 @@ async function initCloud(){try{
 }catch(e){coll=null;setSync("err");noCloud()}}
 var fSnap="";
 function formState(){return JSON.stringify([$("fDate").value,$("fMin").value,$("fSec").value,$("fKey").value,$("fTag").value.trim(),$("fNote").value,refs,tags])}
-function resetForm(){editId=null;refs=[];tags=[];$("fDate").value=todayStr();["fMin","fSec","fKey","fTag","fNote"].forEach(function(i){$(i).value=""});
+var entryTimer=null;
+function resetForm(){entryTimer=null;editId=null;refs=[];tags=[];$("fDate").value=todayStr();["fMin","fSec","fKey","fTag","fNote"].forEach(function(i){$(i).value=""});
   drawRefs();drawTags();say("msg","");setPreview(false);$("save").textContent="Сохранить запись";$("fTitle").textContent="Новая запись";fSnap=formState()}
 function fillTime(){var s=Math.floor(tEl());if(s>0){$("fMin").value=Math.floor(s/60);$("fSec").value=s%60}}
-function newEntry(){if(sheetOpen())return;resetForm();if(!tm.start)fillTime();fSnap=formState();openSheet()}
+function newEntry(fromReading){
+  if(sheetOpen())return;
+  resetForm();
+  if(fromReading===true){fillTime();entryTimer=tm}
+  fSnap=formState();
+  openSheet();
+}
 function startEdit(e){closeAll().then(function(ok){if(!ok)return;resetForm();editId=e.id;$("fDate").value=e.date;$("fMin").value=e.min||"";$("fSec").value=e.sec||"";$("fKey").value=e.key||"";$("fNote").value=e.note||"";
   refs=(e.refs||[]).slice();tags=(e.tags||[]).slice();drawRefs();drawTags();$("save").textContent="Сохранить изменения";$("fTitle").textContent="Изменить запись";fSnap=formState();openSheet()})}
 $("cancel").onclick=function(){closeTop()};
 $("pickBtn").onclick=function(){openPicker({done:function(rs){rs.forEach(function(r){refs.push(r)});drawRefs();say("msg","")}})};
+$("typeReading").onclick=function(){openReadingInput({done:function(rs){refs.push(...rs);drawRefs();say("msg","")}})};
 $("save").onclick=function(){
-  if(tm.start)tPause();
   addTag();
   var e={id:editId||("e"+Date.now().toString(36)+Math.random().toString(36).slice(2,6)),date:$("fDate").value||todayStr(),min:$("fMin").value,sec:$("fSec").value,refs:refs.slice(),key:$("fKey").value.trim(),tags:tags.slice(),note:$("fNote").value.trim(),fav:false};
   if(editId){var o=entries.find(function(x){return x.id===editId});if(o)e.fav=!!o.fav}
   if(!e.refs.length&&!e.key&&!e.note){say("msg","Добавьте отрывок, мысль или заметку.");return}
-  var was=editId;putEntry(e);resetForm();tm={acc:0,start:0};tSave();tShow();closeModal($("fSheet"));toast(was?"Изменения сохранены":"Запись сохранена");tab("L")};
+  var was=editId;if(entryTimer===tm){tm={acc:0,start:0};tSave();tShow()}putEntry(e);resetForm();closeModal($("fSheet"));toast(was?"Изменения сохранены":"Запись сохранена");tab("L")};
 /* markup & refs */
 function fold(s){return String(s).replace(/[\s\S]/g,function(c){if(c==="İ"||c==="I"||c==="ı")return "i";var l=c.toLowerCase();return l.length===1?l:c})}
 var NUMW=["Birinci","İkinci","Üçüncü"],NM={},RX=(function(){var alts=[];
@@ -134,7 +195,7 @@ function prefixSel(p){var v=ta.value,s=v.lastIndexOf("\n",ta.selectionStart-1)+1
   var ls=v.slice(s,e).split("\n"),all=ls.every(function(l){return l.indexOf(p)===0}),out=ls.map(function(l){return all?l.slice(p.length):p+l}).join("\n");
   edit(s,e,out,s+(ls.length>1?0:out.length),s+out.length)}
 function insertRef(){var s=ta.selectionStart,e=ta.selectionEnd;
-  openPicker({title:"Вставить ссылку на отрывок",done:function(rs){var val=ta.value,t=rs.map(refLabel).join("; ");
+  openPicker({title:"Вставить ссылку на отрывок",chapterParts:true,done:function(rs){var val=ta.value,t=rs.map(refLabel).join("; ");
     if(s>0&&!/\s/.test(val[s-1]))t=" "+t;if(e<val.length&&!/\s/.test(val[e]))t+=" ";
     edit(s,e,t,s+t.length,s+t.length);say("msg","")}})}
 Array.prototype.forEach.call($("tbar").querySelectorAll("button"),function(b){
@@ -168,7 +229,7 @@ function match(e){
   if(flt.date&&e.date!==flt.date)return false;
   if(flt.fav&&!e.fav)return false;
   if(flt.tag&&(e.tags||[]).indexOf(flt.tag)<0)return false;
-  if(flt.book&&!(e.refs||[]).some(function(r){return r.b===flt.book&&(!flt.ch||+r.c===+flt.ch)}))return false;
+  if(flt.book&&!refChapters(e.refs).some(function(r){return r.b===flt.book&&(!flt.ch||+r.c===+flt.ch)}))return false;
   var q=fold(flt.q.trim());if(!q)return true;
   return fold([e.key,e.note,(e.tags||[]).join(" "),(e.refs||[]).map(refLabel).join(" ")].join(" ")).indexOf(q)>=0}
 
@@ -201,14 +262,14 @@ function listCompact(list,f){monthGroups(f).forEach(function(g){var mh=h("div","
   g.days.forEach(function(es){es.forEach(function(e){list.appendChild(swipeWrap(rowEl(e),e,true))})})})}
 function rowEl(e){var r=h("div","ap-row entry-row");r.tabIndex=0;r.setAttribute("role","button");var a=e.date.split("-"),dt=new Date(+a[0],+a[1]-1,+a[2]);
   var d=h("div","ap-rd");d.appendChild(h("div","",String(+a[2])+" "+MS[+a[1]-1]));d.appendChild(h("div","",dt.toLocaleDateString("ru-RU",{weekday:"short"})));r.appendChild(d);
-  var m=h("div","ap-rm"),k=keyOf(e);m.appendChild(h("div","ap-rr",(e.refs||[]).length?e.refs.map(refLabel).join("; "):"Без отрывка"));if(k.t)m.appendChild(h("div","ap-rk",k.t));r.appendChild(m);
+  var m=h("div","ap-rm"),k=keyOf(e);m.appendChild(h("div","ap-rr",(e.refs||[]).length?e.refs.map(refLabel).join(", "):"Без отрывка"));if(k.t)m.appendChild(h("div","ap-rk",k.t));r.appendChild(m);
   var x=h("div","ap-rx"),t=fmtSecs(secsOf(e)).trim();if(t)x.appendChild(h("span","",t.replace(/ сек$/," с")));x.appendChild(favBtn(e));r.appendChild(x);
-  r.setAttribute("aria-label",fmtDay(e.date)+": "+((e.refs||[]).map(refLabel).join("; ")||k.t||"запись"));
+  r.setAttribute("aria-label",fmtDay(e.date)+": "+((e.refs||[]).map(refLabel).join(", ")||k.t||"запись"));
   r.addEventListener("click",function(ev){if(ev.target.closest("button")||swJust())return;openDetail(e.id,r)});
   r.addEventListener("keydown",function(ev){if(ev.target===r&&(ev.key==="Enter"||ev.key===" ")){ev.preventDefault();openDetail(e.id,r)}});return r}
 function listTimeline(list,f){monthGroups(f).forEach(function(g){list.appendChild(h("div","ap-tlm",monthName(g.k)));var w=h("div","ap-tlw");
   g.days.forEach(function(es){var d=h("div","ap-tld"),hd=h("div","ap-tldh"),s=es.reduce(function(a,e){return a+secsOf(e)},0);hd.appendChild(h("span","",fmtDate(es[0].date)));if(s)hd.appendChild(h("span","",fmtSecs(s).trim()));d.appendChild(hd);
-    es.forEach(function(e){var b=h("button","ap-tli"),k=keyOf(e);b.type="button";var rr=h("div","ap-rr",(e.refs||[]).length?e.refs.map(refLabel).join("; "):"Без отрывка");if(e.fav){var st=h("span","ap-fv"," ★");st.setAttribute("aria-label","избранное");rr.appendChild(st)}b.appendChild(rr);
+    es.forEach(function(e){var b=h("button","ap-tli"),k=keyOf(e);b.type="button";var rr=h("div","ap-rr",(e.refs||[]).length?e.refs.map(refLabel).join(", "):"Без отрывка");if(e.fav){var st=h("span","ap-fv"," ★");st.setAttribute("aria-label","избранное");rr.appendChild(st)}b.appendChild(rr);
       if(k.t)b.appendChild(h("div","ap-rk",k.t));if(e.tags&&e.tags.length)b.appendChild(h("div","ap-rs",e.tags.join(" · ")));b.onclick=function(){openDetail(e.id,b)};d.appendChild(b)});w.appendChild(d)});list.appendChild(w)})}
 function renderChips(){var box=$("aChips");box.innerHTML="";var items=[];
   if(flt.q.trim())items.push(["Поиск: «"+flt.q.trim()+"»",function(){flt.q=""}]);
@@ -228,7 +289,7 @@ function card(e,sub){
   var c=h("article","entry ap-click"+(sub?" subc":"")),top=h("div","top");top.appendChild(h("span","",fmtDate(e.date)));c.tabIndex=0;c.dataset.id=e.id;
   var r=h("span","r"),t=fmtSecs(secsOf(e));if(t)r.appendChild(h("span","",t));r.appendChild(favBtn(e));top.appendChild(r);c.appendChild(top);
   var k=keyOf(e);if(k.t)c.appendChild(h("div","key"+(k.a?" auto":""),k.t));
-  if(e.refs&&e.refs.length)c.appendChild(h("div","refs",e.refs.map(refLabel).join("; ")));
+  if(e.refs&&e.refs.length)c.appendChild(h("div","refs",e.refs.map(refLabel).join(", ")));
   if(e.tags&&e.tags.length)c.appendChild(tagChips(e.tags));
   if(e.note)c.appendChild(rich(e.note));
   var a=h("div","acts"),b1=h("button","btn sm","Изменить"),b2=h("button","btn sm","Удалить");b1.type=b2.type="button";
@@ -241,14 +302,14 @@ function dayCard(es){
   var s=es.reduce(function(a,e){return a+secsOf(e)},0);top.appendChild(h("span","",es.length+" зап."+(s?", "+fmtSecs(s):"")));c.appendChild(top);
   var ks=h("div","keys"),kseen={};es.forEach(function(e){var k=keyOf(e);if(k.t&&!kseen[k.t]&&(kseen[k.t]=1))ks.appendChild(h("div","key"+(k.a?" auto":""),k.t))});if(ks.childNodes.length)c.appendChild(ks);
   var rl=[],ts=[];es.forEach(function(e){(e.refs||[]).forEach(function(r){var l=refLabel(r);if(rl.indexOf(l)<0)rl.push(l)});(e.tags||[]).forEach(function(t){if(ts.indexOf(t)<0)ts.push(t)})});
-  if(rl.length)c.appendChild(h("div","refs",rl.join("; ")));if(ts.length)c.appendChild(tagChips(ts));
+  if(rl.length)c.appendChild(h("div","refs",rl.join(", ")));if(ts.length)c.appendChild(tagChips(ts));
   var a=h("div","acts"),b=h("button","btn sm",openD[day]?"Скрыть отдельные записи":"Показать отдельные записи"),box=h("div");b.type="button";b.setAttribute("aria-expanded",!!openD[day]);
   box.hidden=!openD[day];es.forEach(function(e){box.appendChild(swipeWrap(card(e,true),e))});
   b.onclick=function(){openD[day]=!openD[day];box.hidden=!openD[day];b.textContent=openD[day]?"Скрыть отдельные записи":"Показать отдельные записи";b.setAttribute("aria-expanded",!!openD[day])};
   a.appendChild(b);c.appendChild(a);c.appendChild(box);
   c.tabIndex=0;c.addEventListener("click",function(ev){if(ev.target.closest("button,a,summary")||swJust())return;openDetail(es[0].id,c)});
   c.addEventListener("keydown",function(ev){if(ev.target===c&&ev.key==="Enter"){ev.preventDefault();openDetail(es[0].id,c)}});return c}
-function askDelete(e){var rf=(e.refs||[]).map(refLabel).join("; ");
+function askDelete(e){var rf=(e.refs||[]).map(refLabel).join(", ");
   confirmDlg({title:"Удалить запись?",text:fmtDay(e.date)+(rf?" · "+rf:"")+". Запись можно будет вернуть в течение нескольких секунд.",ok:"Удалить",danger:true}).then(function(ok){if(ok)delWithUndo(e)})}
 function delWithUndo(e){var o=entries.find(function(x){return x.id===e.id})||e,copy=JSON.parse(JSON.stringify(o));
   if(det&&det.id===e.id)closeModal(det.m);removeEntry(e.id);if(coll){entries=entries.filter(function(x){return x.id!==e.id});render()}
@@ -275,9 +336,9 @@ function dstr(n){var d=new Date(n*864e5);return d.getUTCFullYear()+"-"+pad(d.get
 function fmtDay(s){var a=s.split("-");return new Date(+a[0],+a[1]-1,+a[2]).toLocaleDateString("ru-RU",{day:"numeric",month:"long",year:"numeric"}).replace(/\s*г\.?$/,"")}
 function wdOf(s){return (new Date(dnum(s)*864e5).getUTCDay()+6)%7}
 var MS=["янв","фев","мар","апр","май","июн","июл","авг","сен","окт","ноя","дек"],WD=["Пн","Вт","Ср","Чт","Пт","Сб","Вс"],WDF=["понедельник","вторник","среда","четверг","пятница","суббота","воскресенье"];
-function readMap(list){var m={};(list||entries).forEach(function(e){(e.refs||[]).forEach(function(r){var b=BK[r.b],c=+r.c;if(b&&c>=1&&c<=b.c){(m[r.b]=m[r.b]||{})[c]=1}})});return m}
+function readMap(list){var m={};(list||entries).forEach(function(e){refChapters(e.refs).forEach(function(r){var b=BK[r.b],c=+r.c;if(b&&c>=1&&c<=b.c){(m[r.b]=m[r.b]||{})[c]=1}})});return m}
 function cntRead(m,from,to){var n=0;B.slice(from,to).forEach(function(b){n+=Object.keys(m[b.k]||{}).length});return n}
-function chOf(e){var s={};(e.refs||[]).forEach(function(r){if(BK[r.b])s[r.b+" "+(+r.c)]=1});return Object.keys(s).length}
+function chOf(e){var s={};refChapters(e.refs).forEach(function(r){if(BK[r.b])s[r.b+" "+(+r.c)]=1});return Object.keys(s).length}
 function renderProg(){renderRings();renderTiles();renderHeat();renderCal();renderGoal();renderStats();renderAch()}
 function pct(a,b){return num(Math.floor(a/b*1000)/10)+" %"}
 
@@ -441,7 +502,7 @@ function ybNote(t){var n=rich(t);Array.prototype.slice.call(n.querySelectorAll("
 function ybEntry(e){var d=h("div","yb-e"),top=h("div","yb-d"),r=h("span");top.appendChild(h("span","",fmtDate(e.date)));
   var t=fmtSecs(secsOf(e)).trim();if(t)r.appendChild(document.createTextNode(t));if(e.fav)r.appendChild(h("span","yb-fav",(t?" ":"")+"★ избранное"));top.appendChild(r);d.appendChild(top);
   if(e.key)d.appendChild(h("div","yb-k",e.key));
-  if(e.refs&&e.refs.length)d.appendChild(h("div","yb-rf",e.refs.map(refLabel).join("; ")));
+  if(e.refs&&e.refs.length)d.appendChild(h("div","yb-rf",e.refs.map(refLabel).join(", ")));
   if(e.tags&&e.tags.length)d.appendChild(h("div","yb-tg","Темы: "+e.tags.join(", ")));
   if(e.note)d.appendChild(ybNote(e.note));return d}
 function ybRows(dl,rows){rows.forEach(function(r){dl.appendChild(h("dt","",r[0]));dl.appendChild(h("dd","",r[1]))})}
@@ -503,10 +564,10 @@ $("file").onchange=function(){var f=this.files[0];if(!f)return;var r=new FileRea
 function tSave(){try{localStorage.setItem(TKEY,JSON.stringify(tm))}catch(e){}}
 function tEl(){return tm.acc+(tm.start?(Date.now()-tm.start)/1000:0)}
 function tFmt(s){s=Math.floor(s);return pad(Math.floor(s/3600))+":"+pad(Math.floor(s%3600/60))+":"+pad(s%60)}
-function tClk(){var t=tFmt(tEl());["clk","clk2","fsClk"].forEach(function(i){$(i).textContent=t})}
+function tClk(){var t=tFmt(tEl());["clk","fsClk"].forEach(function(i){$(i).textContent=t})}
 function tShow(){tClk();var l=tm.start?"Пауза":(tEl()>=1?"Продолжить":"Старт");Array.prototype.forEach.call(document.querySelectorAll("[data-tstart]"),function(b){b.textContent=l;b.setAttribute("aria-pressed",!!tm.start)})}
-function tPause(){if(tm.start){tm.acc+=(Date.now()-tm.start)/1000;tm.start=0;tSave()}fillTime();tShow()}
+function tPause(){if(tm.start){tm.acc+=(Date.now()-tm.start)/1000;tm.start=0;tSave()}tShow()}
 function tToggle(){if(tm.start)tPause();else{tm.start=Date.now();tSave();tShow()}}
 Array.prototype.forEach.call(document.querySelectorAll("[data-tstart]"),function(b){b.onclick=tToggle});
-$("tReset").onclick=function(){tm={acc:0,start:0};tSave();$("fMin").value="";$("fSec").value="";tShow()};
+$("tReset").onclick=function(){tm={acc:0,start:0};tSave();tShow()};
 setInterval(function(){if(tm.start)tClk()},500);

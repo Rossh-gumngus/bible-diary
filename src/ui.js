@@ -108,7 +108,7 @@ function renderDetail(){if(!det)return;var e=entries.find(function(x){return x.i
   var ids=detIds(),i=ids.indexOf(e.id),bd=det.bd;det.t.textContent=fmtDate(e.date);bd.innerHTML="";
   var mt=h("div","ap-dmeta"),tt=fmtSecs(secsOf(e)).trim();mt.appendChild(h("span","",tt?"Время чтения: "+tt:"Время не отмечено"));mt.appendChild(favBtn(e));bd.appendChild(mt);
   if(e.key)bd.appendChild(h("p","ap-dkey",e.key));
-  if(e.refs&&e.refs.length){var rf=h("div","refs");e.refs.forEach(function(r,k){if(k)rf.appendChild(document.createTextNode("; "));var b=h("button","",refLabel(r));b.type="button";b.title="Все записи по главе "+(BK[r.b]?BK[r.b].n:r.b)+" "+r.c;b.onclick=function(){if(BK[r.b])showPassage(r.b,+r.c)};rf.appendChild(b)});bd.appendChild(rf)}
+  if(e.refs&&e.refs.length){var rf=h("div","refs");e.refs.forEach(function(r,k){if(k)rf.appendChild(document.createTextNode(", "));if(r.to){rf.appendChild(document.createTextNode(refLabel(r)));return}var b=h("button","",refLabel(r));b.type="button";b.title="Все записи по главе "+(BK[r.b]?BK[r.b].n:r.b)+" "+r.c;b.onclick=function(){if(BK[r.b])showPassage(r.b,+r.c)};rf.appendChild(b)});bd.appendChild(rf)}
   if(e.tags&&e.tags.length)bd.appendChild(tagChips(e.tags));
   if(e.note){var o=h("div","ap-orn");o.appendChild(h("span","","◆"));o.setAttribute("aria-hidden","true");bd.appendChild(o);bd.appendChild(rich(e.note))}
   if(!e.key&&!e.note&&!(e.refs||[]).length)bd.appendChild(h("p","empty","Запись пуста."));
@@ -116,6 +116,41 @@ function renderDetail(){if(!det)return;var e=entries.find(function(x){return x.i
   det.pv.disabled=i<=0;det.nx.disabled=i<0||i>=ids.length-1;det.cn.textContent=i>=0?(i+1)+" из "+ids.length:""}
 
 /* --- passage picker --- */
+function openReadingInput(o){
+  var box=h("form","ap-pk"),hd=h("div","ap-dh");
+  var title=h("h2","ap-dt",o.title||"Ввести отрывки");
+  title.id="readingTitle";
+  hd.appendChild(title);
+  box.appendChild(hd);
+  var bd=h("div","ap-db"),label=h("label","","Что прочитано");
+  label.htmlFor="readingText";
+  var input=h("textarea");
+  input.id="readingText";
+  input.rows=3;
+  input.value=o.init?refLabel(o.init):"";
+  input.setAttribute("aria-describedby","readingHint readingError");
+  var hint=h("p","hint","Укажи книгу, главу и стих. Разделяй отрывки запятыми. Например: Исход 3:16 - Исход 8:3, Иоанна 3:16.");
+  hint.id="readingHint";
+  var error=h("div","msg");
+  error.id="readingError";
+  error.setAttribute("role","alert");
+  bd.append(label,input,hint,error);
+  box.appendChild(bd);
+  var ft=h("div","ap-df"),cancel=h("button","btn","Отмена"),save=h("button","btn main",o.init?"Применить":"Добавить");
+  cancel.type="button";
+  cancel.setAttribute("data-close","");
+  save.type="submit";
+  ft.append(cancel,save);
+  box.appendChild(ft);
+  var m=openModal(box,{variant:"sheet",label:title.id,focus:input});
+  box.onsubmit=function(e){
+    e.preventDefault();
+    var parsed=parseReading(input.value);
+    if(!parsed){error.textContent="Проверь названия книг, номера глав и стихов и порядок границ диапазона.";input.setAttribute("aria-invalid","true");input.focus();return}
+    closeModal(m);
+    o.done(parsed);
+  };
+}
 var BAL={};B.forEach(function(b){var v=[fold(b.n)],m=b.n.match(/^(Birinci|İkinci|Üçüncü|1|2|3) (.+)$/);if(m){var n=NUMW.indexOf(m[1])+1||+m[1];v=[fold(n+" "+m[2]),fold(NUMW[n-1]+" "+m[2]),fold(n+m[2])]}BAL[b.k]=v});
 function vsRanges(k,c,v){var mx=maxV(k,c);if(!v)return mx?[[1,mx]]:[];return String(v).split(",").map(function(p){var m=p.split("-"),a=+m[0],z=+(m[1]||m[0]);return [a,z]}).filter(function(r){return r[0]>=1&&r[1]>=r[0]})}
 function openPicker(o){var st={step:"b",b:null,c:0,rg:[],start:null,mc:false,cs:null,cr:null},rd=readMap();
@@ -128,8 +163,19 @@ function openPicker(o){var st={step:"b",b:null,c:0,rg:[],start:null,mc:false,cs:
     if(st.step==="v"){p.appendChild(h("span","","›"));p.appendChild(h("span","",String(st.c)))}return p}
   function vtxt(){return st.rg.slice().sort(function(a,b){return a[0]-b[0]}).map(function(r){return r[0]===r[1]?String(r[0]):r[0]+"-"+r[1]}).join(",")}
   function finish(v){var mx=maxV(st.b,st.c),r={b:st.b,c:st.c,v:v||(mx?"1-"+mx:"")},e=vsErr(r.b,r.c,r.v);if(e){say("pkMsg",e);return}closeModal(m);o.done([r])}
-  /* «Вся глава» и «Несколько глав целиком» сохраняют обычный диапазон 1-последний стих (по таблице стихов azb) — так же, как ручной выбор */
-  function finishCh(){if(!st.cr){say("pkMsg","Нажмите на первую и последнюю главу.");return}var rs=[];for(var c=st.cr[0];c<=st.cr[1];c++){var mx=maxV(st.b,c);rs.push({b:st.b,c:c,v:mx?"1-"+mx:""})}closeModal(m);o.done(rs)}
+  function finishCh(){
+    if(!st.cr){say("pkMsg","Нажмите на первую и последнюю главу.");return}
+    var first=st.cr[0],last=st.cr[1];
+    if(o.chapterParts){
+      var rs=[];
+      for(var c=first;c<=last;c++)rs.push({b:st.b,c:c,v:"1-"+maxV(st.b,c)});
+      closeModal(m);o.done(rs);return;
+    }
+    var r={b:st.b,c:first,v:"1"};
+    if(first!==last)r.to={b:st.b,c:last,v:String(maxV(st.b,last))};
+    else r.v="1-"+maxV(st.b,first);
+    closeModal(m);o.done([r]);
+  }
   function draw(){bd.innerHTML="";ft.innerHTML="";bd.appendChild(path());var cb=h("button","btn","Отмена");cb.type="button";cb.onclick=function(){closeModal(m)};ft.appendChild(cb);
     if(st.step==="b"){var q=h("input");q.type="search";q.placeholder="Найти книгу: Zəbur, Yəhya, 1 Kor…";q.setAttribute("aria-label","Найти книгу");bd.appendChild(q);
       var secs=[];[["Əhdi-Ətiq",0,39],["Əhdi-Cədid",39,66]].forEach(function(s){var hh=h("h3","ap-pkh",s[0]),g=h("div","ap-bgrid");bd.appendChild(hh);bd.appendChild(g);
@@ -158,7 +204,7 @@ function openPicker(o){var st={step:"b",b:null,c:0,rg:[],start:null,mc:false,cs:
       function inR(v){for(var i=0;i<st.rg.length;i++)if(v>=st.rg[i][0]&&v<=st.rg[i][1])return i;return -1}
       function upd(){Array.prototype.forEach.call(g.children,function(bt){var v=+bt.textContent;bt.classList.toggle("ap-on",inR(v)>=0);bt.classList.toggle("ap-st",st.start===v);bt.setAttribute("aria-pressed",inR(v)>=0||st.start===v)});
         var vt=vtxt(),f=full();wb.setAttribute("aria-pressed",f?"true":"false");sel.textContent=vt?BK[st.b].n+" "+st.c+":"+vt+(f?" · вся глава":"")+(st.start?" · выберите конец диапазона":""):BK[st.b].n+" "+st.c+" · выберите стихи или «Вся глава»";}
-      for(var v=1;v<=mx;v++){var bt=h("button","ap-nb",String(v));bt.type="button";bt.onclick=(function(v){return function(){
+      for(var v=1;v<=mx;v++){var bt=h("button","ap-nb ap-verse-number",String(v));bt.type="button";bt.onclick=(function(v){return function(){
         if(st.start===null){var i=inR(v);if(i>=0)st.rg.splice(i,1);else st.start=v}
         else{var a=Math.min(st.start,v),z=Math.max(st.start,v);st.start=null;var nr=[a,z],keep=[];st.rg.forEach(function(r){if(r[1]<a-1||r[0]>z+1)keep.push(r);else{nr[0]=Math.min(nr[0],r[0]);nr[1]=Math.max(nr[1],r[1])}});keep.push(nr);st.rg=keep}
         upd()}})(v);g.appendChild(bt)}
@@ -173,9 +219,15 @@ var wake=null;
 function openFocus(){var M=MG(),P=PG(),t=[];if(M)t.push("Минуты в день: "+goalInfo(M).bar.txt);if(P)t.push("«"+PLAN[P.plan].t+"»: "+planInfo(P).bar.txt);$("fsSub").textContent=t.length?t.join(" · "):"Спокойного чтения. Таймер продолжит идти, даже если закрыть этот экран.";
   openModal($("focusBox"),{variant:"full",label:"focusTitle",keep:true,focus:"#fsStart",onClose:function(){if(wake){try{wake.release()}catch(e){}wake=null}}});
   try{if(navigator.wakeLock)navigator.wakeLock.request("screen").then(function(w){wake=w},function(){})}catch(e){}}
-$("focusBtn").onclick=openFocus;$("focusBtn2").onclick=openFocus;$("fsExit").onclick=function(){closeModal($("focusBox"))};
-$("fsDone").onclick=function(){var fromSheet=sheetOpen();if(tm.start){tm.acc+=(Date.now()-tm.start)/1000;tm.start=0;tSave()}closeModal($("focusBox"));
-  if(!fromSheet){resetForm();fillTime();fSnap=formState();openSheet()}else fillTime();tShow()};
+$("focusBtn").onclick=openFocus;
+$("fsExit").onclick=function(){closeModal($("focusBox"))};
+function finishReading(){
+  tPause();
+  closeModal($("focusBox"));
+  newEntry(true);
+}
+$("fsDone").onclick=finishReading;
+$("tDone").onclick=finishReading;
 
 /* --- theme --- */
 var THK="bd6-theme",THN={system:"как в системе",light:"светлая",dark:"тёмная"},THI={system:["M3 5h18v11H3z","M8 20h8M12 16v4"],light:["M12 8a4 4 0 1 1 0 8 4 4 0 0 1 0-8z","M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"],dark:["M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"]};
