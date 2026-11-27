@@ -132,8 +132,6 @@ button{font-family:inherit}
 .ap-db{overflow-y:auto;overflow-x:hidden;padding:6px 16px 16px;flex:1 1 auto;overscroll-behavior:contain;min-height:0;-webkit-overflow-scrolling:touch}
 .ap-df{display:flex;gap:8px;padding:10px 16px;border-top:1px solid var(--rule);flex:0 0 auto;flex-wrap:wrap}
 .ap-df .btn{flex:1 1 auto}
-.ap-trow{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:10px;padding:8px 10px;border:1px solid var(--rule);border-radius:10px}
-.ap-trow .ap-clk{font-size:22px;margin-right:auto}
 .ap-pick{margin-top:8px}
 @media (min-width:700px){.ap-ov{align-items:center;padding:24px}.ap-dlg{width:min(660px,100%);border-radius:16px;max-height:88vh;animation:apPop .24s var(--ease)}.ap-sheet .ap-dlg::before{display:none}}
 .ap-ov.ap-side{justify-content:flex-end;align-items:stretch;padding:0}
@@ -161,6 +159,7 @@ button{font-family:inherit}
 .ap-bb:hover,.ap-nb:hover{border-color:var(--accent)}
 .ap-ngrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(44px,1fr));gap:5px}
 .ap-nb{height:44px;border:1px solid var(--rule);border-radius:8px;background:transparent;color:var(--ink);cursor:pointer;font-size:15px;font-variant-numeric:tabular-nums;padding:0;position:relative}
+.ap-nb.ap-verse-number{font-size:12px}
 .ap-nb.ap-rdc::after{content:"";position:absolute;left:50%;bottom:5px;width:5px;height:5px;margin-left:-2.5px;border-radius:50%;background:var(--accent)}
 .ap-nb.ap-on{background:var(--accent);border-color:var(--accent);color:var(--onacc)}
 .ap-nb.ap-st{outline:2px solid var(--accent);outline-offset:1px}
@@ -177,15 +176,6 @@ button{font-family:inherit}
 .ap-dnav .ap-dcnt{flex:1 1 auto;text-align:center;color:var(--mute);font-size:14px;font-variant-numeric:tabular-nums}
 .ap-dnav .btn{flex:0 0 auto}
 /* rings */
-.ap-rings{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(132px,100%),1fr));gap:10px}
-.ap-ring{display:flex;flex-direction:column;align-items:center;text-align:center;padding:12px 6px;border:1px solid var(--rule);border-radius:14px;min-width:0;background:transparent;color:var(--ink);font:inherit}
-button.ap-ring{cursor:pointer}
-.ap-rw{position:relative;width:96px;height:96px}
-.ap-rw svg{width:96px;height:96px;transform:rotate(-90deg)}
-.ap-rw .ap-rbg,.ap-rw .ap-rfg{stroke-width:8}
-.ap-rv{position:absolute;inset:0;display:grid;place-items:center;font-size:19px;font-weight:600;font-variant-numeric:tabular-nums}
-.ap-rl{font-weight:600;margin-top:6px;font-size:15px}
-.ap-rs{color:var(--mute);font-size:13px;line-height:1.35}
 /* tiles */
 .ap-tsec{margin:10px 0 4px;font-weight:600;font-size:16px;display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap}
 .ap-tsec small{font-weight:400;color:var(--mute);font-size:13px}
@@ -199,28 +189,13 @@ button.ap-ring{cursor:pointer}
 .ap-tile[aria-expanded=true]{outline:2px solid var(--ink);outline-offset:1px}
 .ap-tdet{border:1px solid var(--accent);border-radius:12px;padding:10px 12px;margin:8px 0;animation:apIn .2s var(--ease)}
 .ap-tdet .bkh{font-size:16px}
-/* heatmap */
-.ap-heatw{overflow-x:auto;padding:4px 0 6px;max-width:100%}
-.ap-heat{display:grid;grid-template-rows:16px repeat(7,12px);grid-auto-flow:column;grid-auto-columns:12px;gap:3px;width:max-content}
-.ap-heat .ap-hm{font-size:10px;color:var(--mute);white-space:nowrap;overflow:visible;line-height:16px}
-.ap-heat .ap-hw{font-size:10px;color:var(--mute);line-height:12px;width:18px}
-.ap-hc{width:12px;height:12px;border-radius:2px;background:var(--rule);opacity:.55;cursor:pointer}
-.ap-hc.l1{background:var(--accent);opacity:.3}.ap-hc.l2{background:var(--accent);opacity:.52}.ap-hc.l3{background:var(--accent);opacity:.76}.ap-hc.l4{background:var(--accent);opacity:1}
-.ap-hc.ap-x0{visibility:hidden;cursor:default}
-.ap-hc.ap-hsel{outline:2px solid var(--ink);outline-offset:1px}
-.ap-heatleg{display:flex;align-items:center;gap:4px;font-size:12px;color:var(--mute);flex-wrap:wrap}
-.ap-heatleg .ap-hc{cursor:default}
-.ap-heatinfo{font-size:14px;min-height:1.4em;margin:6px 0 0}
 /* achievements */
-.ap-ach{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(160px,100%),1fr));gap:8px}
-.ap-a{border:1px solid var(--rule);border-radius:12px;padding:10px;display:flex;gap:10px;align-items:flex-start;min-width:0}
-.ap-ai{width:36px;height:36px;flex:0 0 auto;border-radius:50%;display:grid;place-items:center;border:1.5px dashed var(--rule);color:var(--mute)}
-.ap-ai svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
-.ap-a.ap-on .ap-ai{background:var(--accent);border:0;color:var(--onacc)}
-.ap-a.ap-off{opacity:.75}
-.ap-at{font-weight:600;font-size:15px;line-height:1.25}
-.ap-ad{font-size:13px;color:var(--mute);line-height:1.3}
-.ap-ap{font-size:12px;color:var(--mute);margin-top:2px;font-variant-numeric:tabular-nums}
+.ap-ach{display:grid;gap:8px}
+.ap-a{border:1px solid var(--rule);border-radius:12px;padding:12px;min-width:0}
+.ap-ahead{display:flex;flex-wrap:wrap;justify-content:space-between;gap:4px 16px;align-items:baseline}
+.ap-at{margin:0;font-weight:600;font-size:15px;line-height:1.25}
+.ap-av{font-variant-numeric:tabular-nums}
+.ap-ap{font-size:13px;color:var(--mute);margin:6px 0 0}
 /* focus */
 .ap-focus{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100%;padding:calc(64px + env(safe-area-inset-top,0px)) 20px calc(24px + env(safe-area-inset-bottom,0px));gap:18px;text-align:center;flex:1 1 auto}
 .ap-fhead{position:absolute;top:calc(12px + env(safe-area-inset-top,0px));left:16px;right:16px;display:flex;justify-content:space-between;align-items:center}
@@ -241,7 +216,7 @@ button.ap-ring{cursor:pointer}
 @media print{
 :root{--bg:#fff!important;--paper:#fff!important;--ink:#1c2733!important;--mute:#5d6b76!important;--rule:#c5cdc8!important;--accent:#1d5b78!important;--onacc:#fff!important;--warm:#a8742a!important;color-scheme:light!important}
 html,body{background:#fff!important;color:#1c2733!important;padding:0!important}
-.ap-hdr,.ap-nav,.ap-fab,.ap-toasts,#ovRoot,.ap-tip,#pW,#pL,#pP,.yb-ctl,#pY>.hint,#ybMsg,button{display:none!important}
+.ap-hdr,.ap-nav,.ap-fab,.ap-toasts,#ovRoot,.ap-tip,#pW,#pL,#pN,#pP,.yb-ctl,#pY>.hint,#ybMsg,button{display:none!important}
 .ap-main{max-width:none;padding:0!important;margin:0}
 #pY,#pY[hidden]{display:block!important;border:0;padding:0;background:none;border-radius:0;animation:none}
 #ybBook{border:0;margin:0}
