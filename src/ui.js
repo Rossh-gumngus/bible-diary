@@ -248,7 +248,6 @@ $("themeBtn").onclick=function(){var t={system:"light",light:"dark",dark:"system
 themeApply(themeCur());
 
 /* --- header --- */
-function streak(){var d={};readingEntries().forEach(function(e){if(e.date)d[e.date]=1});var t=dnum(todayStr());if(!d[dstr(t)])t--;var n=0;while(d[dstr(t)]){n++;t--}return n}
 function renderHdr(){var s=streak(),el=$("hStreak");el.hidden=!s;$("hStreakT").textContent=s+" "+plur(s,"день","дня","дней");el.title="Дней подряд с записями: "+s;el.setAttribute("aria-label",el.title);
   /* мини-кольцо в шапке: одна цель — одно кольцо со счётчиком; обе — два концентрических кольца (внешнее — минуты сегодня, внутреннее — план), без числа */
   var hg=$("hGoal"),M=MG(),P=PG();hg.hidden=!M&&!P;if(!M&&!P)return;

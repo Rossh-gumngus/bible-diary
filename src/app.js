@@ -544,6 +544,23 @@ function bars(data,title,W){var H=180,L=36,R=6,T=18,Bt=26,iw=W-L-R,ih=H-T-Bt,mx=
     s.appendChild(svgEl("rect",{x:x,y:T,width:bw,height:ih,fill:"transparent","class":"hit","data-tip":d.f+": "+num(d.v)+" мин"}));
     if(i%step===(data.length-1)%step)s.appendChild(svgEl("text",{x:x+bw/2,y:H-8,"text-anchor":"middle","class":"ax"},d.l))});
   return s}
+function streak(dates,today){
+  dates=dates||new Set(readingEntries().map(function(entry){return entry.date}));
+  var day=dnum(today||todayStr()),count=0;
+  if(!dates.has(dstr(day)))day--;
+  while(dates.has(dstr(day))){count++;day--}
+  return count;
+}
+function longestStreak(dates,today){
+  var previous=null,current=0,longest=0;
+  Array.from(dates).filter(function(date){return date<=today}).sort().forEach(function(date){
+    var day=dnum(date);
+    current=previous!==null&&day===previous+1?current+1:1;
+    longest=Math.max(longest,current);
+    previous=day;
+  });
+  return longest;
+}
 function statsData(list,today){
   today=today||todayStr();
   var dates=new Set(),total=0,secondsToday=0;
@@ -553,18 +570,21 @@ function statsData(list,today){
     total+=seconds;
     if(entry.date===today)secondsToday+=seconds;
   });
-  return {today:secondsToday,total:total,days:dates.size,average:dates.size?total/dates.size:0};
+  return {today:secondsToday,total:total,days:dates.size,average:dates.size?total/dates.size:0,
+    streak:streak(dates,today),longest:longestStreak(dates,today)};
 }
 function renderStats(){
-  var list=$("stats"),data=statsData();
-  list.replaceChildren();
+  var data=statsData();
   function time(seconds){
     seconds=Math.round(seconds);
     return (fmtSecs(seconds)+(seconds>=3600&&seconds%60?seconds%60+" сек":"")).trim()||"0 мин";
   }
-  [["Минуты сегодня",time(data.today)],["Общее время",time(data.total)],
-    ["Дней чтения",String(data.days)],["В среднем за день чтения",time(data.average)]
-  ].forEach(function(row){list.append(h("dt","",row[0]),h("dd","",row[1]))});
+  say("statsDays",data.days);
+  say("statsStreak",data.streak);
+  say("statsLongest",data.longest+" "+plur(data.longest,"день","дня","дней"));
+  say("statsToday",time(data.today));
+  say("statsTotal",time(data.total));
+  say("statsAverage",time(data.average));
 }
 
 /* goal card on «Читать» */

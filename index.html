@@ -1134,7 +1134,14 @@ button:focus-visible,summary:focus-visible,[tabindex]:focus-visible{outline:2px 
   <section id="pP" class="ap-panel" role="tabpanel" aria-labelledby="tabP" hidden>
     <div class="ap-sec">
     <h2 class="ap-h2">Обзор</h2>
-    <dl class="sts" id="stats"></dl>
+    <dl class="sts">
+      <dt>Дней чтения</dt><dd id="statsDays">0</dd>
+      <dt>Дней чтения подряд</dt><dd id="statsStreak">0</dd>
+      <dt>Самая длинная серия</dt><dd id="statsLongest">0 дней</dd>
+      <dt>Минуты сегодня</dt><dd id="statsToday">0 мин</dd>
+      <dt>Общее время</dt><dd id="statsTotal">0 мин</dd>
+      <dt>В среднем за день чтения</dt><dd id="statsAverage">0 мин</dd>
+    </dl>
     </div>
     <div class="ap-sec">
     <h2 class="ap-h2">Карта прочитанного</h2>
@@ -1809,6 +1816,23 @@ function bars(data,title,W){var H=180,L=36,R=6,T=18,Bt=26,iw=W-L-R,ih=H-T-Bt,mx=
     s.appendChild(svgEl("rect",{x:x,y:T,width:bw,height:ih,fill:"transparent","class":"hit","data-tip":d.f+": "+num(d.v)+" мин"}));
     if(i%step===(data.length-1)%step)s.appendChild(svgEl("text",{x:x+bw/2,y:H-8,"text-anchor":"middle","class":"ax"},d.l))});
   return s}
+function streak(dates,today){
+  dates=dates||new Set(readingEntries().map(function(entry){return entry.date}));
+  var day=dnum(today||todayStr()),count=0;
+  if(!dates.has(dstr(day)))day--;
+  while(dates.has(dstr(day))){count++;day--}
+  return count;
+}
+function longestStreak(dates,today){
+  var previous=null,current=0,longest=0;
+  Array.from(dates).filter(function(date){return date<=today}).sort().forEach(function(date){
+    var day=dnum(date);
+    current=previous!==null&&day===previous+1?current+1:1;
+    longest=Math.max(longest,current);
+    previous=day;
+  });
+  return longest;
+}
 function statsData(list,today){
   today=today||todayStr();
   var dates=new Set(),total=0,secondsToday=0;
@@ -1818,18 +1842,21 @@ function statsData(list,today){
     total+=seconds;
     if(entry.date===today)secondsToday+=seconds;
   });
-  return {today:secondsToday,total:total,days:dates.size,average:dates.size?total/dates.size:0};
+  return {today:secondsToday,total:total,days:dates.size,average:dates.size?total/dates.size:0,
+    streak:streak(dates,today),longest:longestStreak(dates,today)};
 }
 function renderStats(){
-  var list=$("stats"),data=statsData();
-  list.replaceChildren();
+  var data=statsData();
   function time(seconds){
     seconds=Math.round(seconds);
     return (fmtSecs(seconds)+(seconds>=3600&&seconds%60?seconds%60+" сек":"")).trim()||"0 мин";
   }
-  [["Минуты сегодня",time(data.today)],["Общее время",time(data.total)],
-    ["Дней чтения",String(data.days)],["В среднем за день чтения",time(data.average)]
-  ].forEach(function(row){list.append(h("dt","",row[0]),h("dd","",row[1]))});
+  say("statsDays",data.days);
+  say("statsStreak",data.streak);
+  say("statsLongest",data.longest+" "+plur(data.longest,"день","дня","дней"));
+  say("statsToday",time(data.today));
+  say("statsTotal",time(data.total));
+  say("statsAverage",time(data.average));
 }
 
 /* goal card on «Читать» */
@@ -2387,7 +2414,6 @@ $("themeBtn").onclick=function(){var t={system:"light",light:"dark",dark:"system
 themeApply(themeCur());
 
 /* --- header --- */
-function streak(){var d={};readingEntries().forEach(function(e){if(e.date)d[e.date]=1});var t=dnum(todayStr());if(!d[dstr(t)])t--;var n=0;while(d[dstr(t)]){n++;t--}return n}
 function renderHdr(){var s=streak(),el=$("hStreak");el.hidden=!s;$("hStreakT").textContent=s+" "+plur(s,"день","дня","дней");el.title="Дней подряд с записями: "+s;el.setAttribute("aria-label",el.title);
   /* мини-кольцо в шапке: одна цель — одно кольцо со счётчиком; обе — два концентрических кольца (внешнее — минуты сегодня, внутреннее — план), без числа */
   var hg=$("hGoal"),M=MG(),P=PG();hg.hidden=!M&&!P;if(!M&&!P)return;
