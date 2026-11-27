@@ -176,15 +176,6 @@ button{font-family:inherit}
 .ap-dnav .ap-dcnt{flex:1 1 auto;text-align:center;color:var(--mute);font-size:14px;font-variant-numeric:tabular-nums}
 .ap-dnav .btn{flex:0 0 auto}
 /* rings */
-.ap-rings{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(132px,100%),1fr));gap:10px}
-.ap-ring{display:flex;flex-direction:column;align-items:center;text-align:center;padding:12px 6px;border:1px solid var(--rule);border-radius:14px;min-width:0;background:transparent;color:var(--ink);font:inherit}
-button.ap-ring{cursor:pointer}
-.ap-rw{position:relative;width:96px;height:96px}
-.ap-rw svg{width:96px;height:96px;transform:rotate(-90deg)}
-.ap-rw .ap-rbg,.ap-rw .ap-rfg{stroke-width:8}
-.ap-rv{position:absolute;inset:0;display:grid;place-items:center;font-size:19px;font-weight:600;font-variant-numeric:tabular-nums}
-.ap-rl{font-weight:600;margin-top:6px;font-size:15px}
-.ap-rs{color:var(--mute);font-size:13px;line-height:1.35}
 /* tiles */
 .ap-tsec{margin:10px 0 4px;font-weight:600;font-size:16px;display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap}
 .ap-tsec small{font-weight:400;color:var(--mute);font-size:13px}

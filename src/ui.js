@@ -250,13 +250,13 @@ themeApply(themeCur());
 /* --- header --- */
 function streak(){var d={};readingEntries().forEach(function(e){if(e.date)d[e.date]=1});var t=dnum(todayStr());if(!d[dstr(t)])t--;var n=0;while(d[dstr(t)]){n++;t--}return n}
 function renderHdr(){var s=streak(),el=$("hStreak");el.hidden=!s;$("hStreakT").textContent=s+" "+plur(s,"день","дня","дней");el.title="Дней подряд с записями: "+s;el.setAttribute("aria-label",el.title);
-  /* мини-кольцо в шапке: одна цель — одно кольцо с процентом; обе — два концентрических кольца (внешнее — минуты сегодня, внутреннее — план), без числа */
+  /* мини-кольцо в шапке: одна цель — одно кольцо со счётчиком; обе — два концентрических кольца (внешнее — минуты сегодня, внутреннее — план), без числа */
   var hg=$("hGoal"),M=MG(),P=PG();hg.hidden=!M&&!P;if(!M&&!P)return;
   function arc(id,r,v){var C=2*Math.PI*r,c=$(id);c.style.strokeDasharray=C;c.style.strokeDashoffset=C*(1-v)}
   var mi=M?goalInfo(M).bar:null,pi=P?planInfo(P).bar:null,fr=function(b){return Math.min(1,b.max?b.v/b.max:0)},both=!!(M&&P),one=mi||pi;
   arc("hGoalC",14,fr(one));$("hGoalC2").style.display=$("hGoalB2").style.display=both?"":"none";if(both)arc("hGoalC2",8,fr(pi));
   var tx=[];if(mi)tx.push("Минуты сегодня: "+mi.txt);if(pi)tx.push("План: "+pi.txt);
-  $("hGoalT").textContent=both?"":Math.floor(fr(one)*100)+" %";$("hGoalT").hidden=both;hg.classList.toggle("ap-hg2",both);
+  $("hGoalT").textContent=both?"":one.v+" / "+one.max;$("hGoalT").hidden=both;hg.classList.toggle("ap-hg2",both);
   hg.setAttribute("aria-label","Цели. "+tx.join(". ")+". Открыть «Прогресс»");hg.title=tx.join("\n")}
 $("hGoal").onclick=openGoal;
 var hdrC=false;window.addEventListener("scroll",function(){var y=window.scrollY||0;if(!hdrC&&y>40){hdrC=true;$("hdr").classList.add("ap-compact")}else if(hdrC&&y<8){hdrC=false;$("hdr").classList.remove("ap-compact")}},{passive:true});
@@ -274,28 +274,16 @@ document.addEventListener("pointerup",function(ev){if(ev.pointerType==="mouse")r
 document.addEventListener("focusin",function(ev){var el=ev.target.closest&&ev.target.closest("[data-tip]");if(el)tipShow(el);else tipHide()});
 window.addEventListener("scroll",tipHide,{passive:true});
 
-/* --- rings --- */
-function ring(p,val,label,sub,fn){var el=h(fn?"button":"div","ap-ring");if(fn){el.type="button";el.onclick=fn}var w=h("div","ap-rw"),C=2*Math.PI*42,s=svgEl("svg",{viewBox:"0 0 100 100","aria-hidden":"true"});
-  s.appendChild(svgEl("circle",{cx:50,cy:50,r:42,"class":"ap-rbg"}));var fg=svgEl("circle",{cx:50,cy:50,r:42,"class":"ap-rfg"});fg.style.strokeDasharray=C;fg.style.strokeDashoffset=C;s.appendChild(fg);w.appendChild(s);w.appendChild(h("span","ap-rv",val));el.appendChild(w);
-  el.appendChild(h("span","ap-rl",label));el.appendChild(h("span","ap-rs",sub));el.setAttribute("aria-label",label+": "+val+". "+sub);
-  requestAnimationFrame(function(){requestAnimationFrame(function(){fg.style.strokeDashoffset=C*(1-Math.max(0,Math.min(1,p)))})});return el}
-function renderRings(){var box=$("rings"),m=readMap(),ot=cntRead(m,0,39),nt=cntRead(m,39,66);box.innerHTML="";
-  var M=MG(),P=PG(),gg=function(){var g=$("goalH");if(g.scrollIntoView)g.scrollIntoView({block:"start"})};
-  if(M){var b=goalInfo(M).bar,p=b.max?Math.min(1,b.v/b.max):0;box.appendChild(ring(p,Math.floor(p*100)+" %","Минуты сегодня",b.v+" из "+b.max+" мин",gg))}
-  if(P){var b2=planInfo(P).bar,p2=b2.max?Math.min(1,b2.v/b2.max):0;box.appendChild(ring(p2,Math.floor(p2*100)+" %","План чтения",b2.v+" из "+b2.max+" "+plur(b2.max,"чтения","чтений","чтений"),gg))}
-  if(!M&&!P)box.appendChild(ring(0,"—","Цели","не заданы",gg));
-  box.appendChild(ring(ot/929,pct(ot,929),"Əhdi-Ətiq",ot+" из 929 глав"));box.appendChild(ring(nt/260,pct(nt,260),"Əhdi-Cədid",nt+" из 260 глав"));box.appendChild(ring((ot+nt)/1189,pct(ot+nt,1189),"Вся Библия",(ot+nt)+" из 1189 глав"))}
-
 /* --- tiles --- */
 var tileOpen="";
 function renderTiles(){var box=$("tiles"),m=readMap();box.innerHTML="";
   [["Əhdi-Ətiq",0,39,929],["Əhdi-Cədid",39,66,260]].forEach(function(t){var hd=h("div","ap-tsec");hd.appendChild(h("span","",t[0]));hd.appendChild(h("small","",cntRead(m,t[1],t[2])+" из "+t[3]+" глав"));box.appendChild(hd);
     var g=h("div","ap-tgrid"),dw=h("div");B.slice(t[1],t[2]).forEach(function(b){var n=Object.keys(m[b.k]||{}).length,p=n/b.c,op=n?.18+.82*p:0,tl=h("button","ap-tile"+(b.c>=40?" s3":b.c>=20?" s2":"")+(op>.55?" ap-dk":""));tl.type="button";
-      var f=h("span","ap-tf");f.style.opacity=op;tl.appendChild(f);tl.appendChild(h("span","ap-tn",b.n));tl.appendChild(h("span","ap-tp",n+"/"+b.c+" · "+Math.floor(p*100)+" %"));
-      var tip=b.n+": "+n+" из "+b.c+" "+plur(b.c,"главы","глав","глав")+" · "+pct(n,b.c);tl.setAttribute("data-tip",tip);tl.setAttribute("aria-label",tip);tl.setAttribute("aria-expanded",tileOpen===b.k);
+      var f=h("span","ap-tf");f.style.opacity=op;tl.appendChild(f);tl.appendChild(h("span","ap-tn",b.n));tl.appendChild(h("span","ap-tp",n+"/"+b.c));
+      var tip=b.n+": "+n+" из "+b.c+" "+plur(b.c,"главы","глав","глав");tl.setAttribute("data-tip",tip);tl.setAttribute("aria-label",tip);tl.setAttribute("aria-expanded",tileOpen===b.k);
       tl.onclick=function(){tileOpen=tileOpen===b.k?"":b.k;renderTiles();var nt=box.querySelector('.ap-tile[aria-expanded="true"]');if(nt)nt.focus({preventScroll:true})};g.appendChild(tl);
       if(tileOpen===b.k)dw.appendChild(tileDet(b,m))});box.appendChild(g);box.appendChild(dw)})}
-function tileDet(b,m){var rd=m[b.k]||{},n=Object.keys(rd).length,d=h("div","ap-tdet"),hd=h("div","bkh");hd.appendChild(h("span","bn",b.n));hd.appendChild(h("small","","прочитано "+n+" из "+b.c+" · "+pct(n,b.c)));d.appendChild(hd);
+function tileDet(b,m){var rd=m[b.k]||{},n=Object.keys(rd).length,d=h("div","ap-tdet"),hd=h("div","bkh");hd.appendChild(h("span","bn",b.n));hd.appendChild(h("small","","прочитано "+n+" из "+b.c));d.appendChild(hd);
   var cs=h("div","cells");for(var c=1;c<=b.c;c++){var lab=b.n+" "+c,x;
     if(rd[c]){x=h("button","cell rd");x.type="button";x.title=lab+": прочитано, показать записи";x.setAttribute("aria-label",x.title);x.onclick=(function(k,c){return function(){showPassage(k,c)}})(b.k,c)}
     else{x=h("span","cell");x.title=lab+": не прочитано"}if(c%10===0)x.classList.add("t");cs.appendChild(x)}d.appendChild(cs);

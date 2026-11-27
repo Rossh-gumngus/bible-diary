@@ -24,8 +24,8 @@ function planState(g,list,today){var p=PLAN[g.plan],days=planDays(p),N=days.leng
   return {p:p,days:days,mk:mk,N:N,D:D,total:total,done:done,dueN:Math.min(dueN,total),dueY:Math.min(dueY,total),k:k,missed:missed,firstUndone:firstUndone,grace:p.grace||[]}}
 function planInfo(g,list,today){var ps=planState(g,list,today),N=ps.N,D=ps.D,L=[],end=planDate(g,N),bar;
   L.push("План «"+ps.p.t+"»: "+N+" "+plur(N,"день","дня","дней")+", с "+fmtDay(g.start)+" по "+fmtDay(end)+".");
-  L.push("Прочитано "+ps.done+" из "+plRg(ps.total)+" ("+pct(ps.done,ps.total)+"), осталось "+plR(ps.total-ps.done)+".");
-  bar={v:ps.done,max:ps.total,mark:D>=1&&D<=N?ps.dueN:null,txt:"Прочитано "+ps.done+" из "+ps.total+" · "+pct(ps.done,ps.total)+(D>=1&&D<=N?" · день "+D+" из "+N:"")};
+  L.push("Прочитано "+ps.done+" из "+plRg(ps.total)+", осталось "+plR(ps.total-ps.done)+".");
+  bar={v:ps.done,max:ps.total,mark:D>=1&&D<=N?ps.dueN:null,txt:"Прочитано "+ps.done+" из "+ps.total+(D>=1&&D<=N?" · день "+D+" из "+N:"")};
   var r={lines:L,bar:bar,ps:ps};
   if(ps.done>=ps.total){L.push("План выполнен. Слава Богу!");r.st="ok";return r}
   if(D<1){L.push("План начнётся "+fmtDay(g.start)+".");r.st="wait";return r}

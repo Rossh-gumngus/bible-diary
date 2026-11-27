@@ -284,12 +284,6 @@ button:focus-visible,summary:focus-visible,[tabindex]:focus-visible{outline:2px 
 .ap-tip{background:rgba(14,26,38,.94);color:#eef5f8;border-radius:var(--r-xs);font-weight:600}
 @media (min-width:900px){.ap-toasts{bottom:32px}}
 /* «Прогресс» */
-.ap-rings{gap:var(--s3)}
-.ap-ring{border:1px solid var(--rule);border-radius:var(--r-lg);background:var(--solid);transition:transform var(--d2) var(--ease),box-shadow var(--d2)}
-button.ap-ring:hover{transform:translateY(-2px);box-shadow:var(--sh2)}
-.ap-rw .ap-rbg,.ap-rw .ap-rfg{stroke-width:9}
-.ap-rv{font-family:var(--f-disp);font-weight:600;font-size:18px}
-.ap-rl{font-weight:800}
 .ap-tsec{font-family:var(--f-disp);font-weight:600;font-size:14.5px;margin:var(--s4) 0 6px}
 .ap-tsec small{font-family:var(--f-ui);font-weight:600}
 .ap-tgrid{gap:5px}
@@ -366,7 +360,7 @@ button.ap-ring:hover{transform:translateY(-2px);box-shadow:var(--sh2)}
 /* micro-interactions */
 .ap-enter{animation:apIn var(--d2) var(--ease)}
 @keyframes apPopIn{0%{transform:scale(.4)}100%{transform:scale(1)}}
-@media (hover:none){.entry.ap-click:hover,.ap-tli:hover,button.ap-ring:hover,.ap-a.ap-on:hover,.gcard.ap-hero:hover,.ap-tile:hover{transform:none}}
+@media (hover:none){.entry.ap-click:hover,.ap-tli:hover,.ap-a.ap-on:hover,.gcard.ap-hero:hover,.ap-tile:hover{transform:none}}
 /* fallbacks: без backdrop-filter — плотнее фон */
 @supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){:root{--paper:rgba(250,252,253,.94)}:root[data-theme=dark]{--paper:rgba(18,32,48,.96)}}
 @media (prefers-reduced-transparency:reduce){:root{--paper:var(--solid);--hdr:var(--bg)}.ap-sec,.ap-card,.entry,.ap-nav,.ap-hdr{-webkit-backdrop-filter:none!important;backdrop-filter:none!important}}

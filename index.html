@@ -245,7 +245,6 @@ textarea#fNote{overflow-y:hidden}
 #gMsg{color:var(--mute)}
 .sts{gap:4px 12px;margin:0;font-size:15px}
 .sts dt{color:var(--mute)}.sts dd{margin:0;text-align:right;font-variant-numeric:tabular-nums}
-.chartw{overflow:hidden}
 .chart{display:block;max-width:100%;height:auto}
 .chart .grid{stroke:var(--rule);stroke-width:1}
 .chart .bar{fill:var(--accent)}
@@ -446,15 +445,6 @@ button{font-family:inherit}
 .ap-dnav .ap-dcnt{flex:1 1 auto;text-align:center;color:var(--mute);font-size:14px;font-variant-numeric:tabular-nums}
 .ap-dnav .btn{flex:0 0 auto}
 /* rings */
-.ap-rings{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(132px,100%),1fr));gap:10px}
-.ap-ring{display:flex;flex-direction:column;align-items:center;text-align:center;padding:12px 6px;border:1px solid var(--rule);border-radius:14px;min-width:0;background:transparent;color:var(--ink);font:inherit}
-button.ap-ring{cursor:pointer}
-.ap-rw{position:relative;width:96px;height:96px}
-.ap-rw svg{width:96px;height:96px;transform:rotate(-90deg)}
-.ap-rw .ap-rbg,.ap-rw .ap-rfg{stroke-width:8}
-.ap-rv{position:absolute;inset:0;display:grid;place-items:center;font-size:19px;font-weight:600;font-variant-numeric:tabular-nums}
-.ap-rl{font-weight:600;margin-top:6px;font-size:15px}
-.ap-rs{color:var(--mute);font-size:13px;line-height:1.35}
 /* tiles */
 .ap-tsec{margin:10px 0 4px;font-weight:600;font-size:16px;display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap}
 .ap-tsec small{font-weight:400;color:var(--mute);font-size:13px}
@@ -896,12 +886,6 @@ button:focus-visible,summary:focus-visible,[tabindex]:focus-visible{outline:2px 
 .ap-tip{background:rgba(14,26,38,.94);color:#eef5f8;border-radius:var(--r-xs);font-weight:600}
 @media (min-width:900px){.ap-toasts{bottom:32px}}
 /* «Прогресс» */
-.ap-rings{gap:var(--s3)}
-.ap-ring{border:1px solid var(--rule);border-radius:var(--r-lg);background:var(--solid);transition:transform var(--d2) var(--ease),box-shadow var(--d2)}
-button.ap-ring:hover{transform:translateY(-2px);box-shadow:var(--sh2)}
-.ap-rw .ap-rbg,.ap-rw .ap-rfg{stroke-width:9}
-.ap-rv{font-family:var(--f-disp);font-weight:600;font-size:18px}
-.ap-rl{font-weight:800}
 .ap-tsec{font-family:var(--f-disp);font-weight:600;font-size:14.5px;margin:var(--s4) 0 6px}
 .ap-tsec small{font-family:var(--f-ui);font-weight:600}
 .ap-tgrid{gap:5px}
@@ -978,7 +962,7 @@ button.ap-ring:hover{transform:translateY(-2px);box-shadow:var(--sh2)}
 /* micro-interactions */
 .ap-enter{animation:apIn var(--d2) var(--ease)}
 @keyframes apPopIn{0%{transform:scale(.4)}100%{transform:scale(1)}}
-@media (hover:none){.entry.ap-click:hover,.ap-tli:hover,button.ap-ring:hover,.ap-a.ap-on:hover,.gcard.ap-hero:hover,.ap-tile:hover{transform:none}}
+@media (hover:none){.entry.ap-click:hover,.ap-tli:hover,.ap-a.ap-on:hover,.gcard.ap-hero:hover,.ap-tile:hover{transform:none}}
 /* fallbacks: без backdrop-filter — плотнее фон */
 @supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){:root{--paper:rgba(250,252,253,.94)}:root[data-theme=dark]{--paper:rgba(18,32,48,.96)}}
 @media (prefers-reduced-transparency:reduce){:root{--paper:var(--solid);--hdr:var(--bg)}.ap-sec,.ap-card,.entry,.ap-nav,.ap-hdr{-webkit-backdrop-filter:none!important;backdrop-filter:none!important}}
@@ -1150,7 +1134,7 @@ button.ap-ring:hover{transform:translateY(-2px);box-shadow:var(--sh2)}
   <section id="pP" class="ap-panel" role="tabpanel" aria-labelledby="tabP" hidden>
     <div class="ap-sec">
     <h2 class="ap-h2">Обзор</h2>
-    <div class="ap-rings" id="rings"></div>
+    <dl class="sts" id="stats"></dl>
     </div>
     <div class="ap-sec">
     <h2 class="ap-h2">Карта прочитанного</h2>
@@ -1174,10 +1158,6 @@ button.ap-ring:hover{transform:translateY(-2px);box-shadow:var(--sh2)}
     <h2 class="ap-h2" id="goalH">Цели</h2>
     <div id="goalView"></div>
     <div class="msg" id="gMsg" aria-live="polite"></div>
-    </div>
-    <div class="ap-sec">
-    <h2 class="ap-h2">Статистика времени</h2>
-    <div id="stats"></div>
     </div>
     <div class="ap-sec">
     <h2 class="ap-h2">Достижения</h2>
@@ -1702,11 +1682,11 @@ function dnum(s){var a=s.split("-");return Date.UTC(+a[0],+a[1]-1,+a[2])/864e5}
 function dstr(n){var d=new Date(n*864e5);return d.getUTCFullYear()+"-"+pad(d.getUTCMonth()+1)+"-"+pad(d.getUTCDate())}
 function fmtDay(s){var a=s.split("-");return new Date(+a[0],+a[1]-1,+a[2]).toLocaleDateString("ru-RU",{day:"numeric",month:"long",year:"numeric"}).replace(/\s*г\.?$/,"")}
 function wdOf(s){return (new Date(dnum(s)*864e5).getUTCDay()+6)%7}
-var MS=["янв","фев","мар","апр","май","июн","июл","авг","сен","окт","ноя","дек"],WD=["Пн","Вт","Ср","Чт","Пт","Сб","Вс"],WDF=["понедельник","вторник","среда","четверг","пятница","суббота","воскресенье"];
+var MS=["янв","фев","мар","апр","май","июн","июл","авг","сен","окт","ноя","дек"],WD=["Пн","Вт","Ср","Чт","Пт","Сб","Вс"];
 function readMap(list){var m={};readingEntries(list).forEach(function(e){refChapters(e.refs).forEach(function(r){var b=BK[r.b],c=+r.c;if(b&&c>=1&&c<=b.c){(m[r.b]=m[r.b]||{})[c]=1}})});return m}
 function cntRead(m,from,to){var n=0;B.slice(from,to).forEach(function(b){n+=Object.keys(m[b.k]||{}).length});return n}
 function chOf(e){if(isNote(e))return 0;var s={};refChapters(e.refs).forEach(function(r){if(BK[r.b])s[r.b+" "+(+r.c)]=1});return Object.keys(s).length}
-function renderProg(){renderRings();renderTiles();renderHeat();renderCal();renderGoal();renderStats();renderAch()}
+function renderProg(){renderStats();renderTiles();renderHeat();renderCal();renderGoal();renderAch()}
 function pct(a,b){return num(Math.floor(a/b*1000)/10)+" %"}
 
 /* 4.2 calendar */
@@ -1755,9 +1735,9 @@ function renderProgIf(){if(curTab==="P")renderProg()}
 function un(t,n,acc){return n+" "+(t==="min"?(acc?plur(n,"минуту","минуты","минут"):plur(n,"минута","минуты","минут")):(acc?plur(n,"главу","главы","глав"):plur(n,"глава","главы","глав")))}
 function unG(t,n){var one=n%10===1&&n%100!==11;return n+" "+(t==="min"?(one?"минуты":"минут"):(one?"главы":"глав"))}
 function goalInfo(g,list,today){if(g.type==="plan")return planInfo(g,list,today);list=readingEntries(list);today=today||todayStr();var n=+g.n,s=g.start,L=[],st,D=dnum(today)-dnum(s)+1;
-  if(g.type==="bible"){var end=dstr(dnum(s)+n-1),m=readMap(list),rd=cntRead(m,0,66),rem=1189-rd,bar={v:rd,max:1189,mark:D>=1&&D<=n?Math.min(1189,Math.ceil(1189*D/n)):null,txt:rd+" из 1189 глав · "+pct(rd,1189)+(D>=1&&D<=n?" · по плану к концу дня: "+Math.min(1189,Math.ceil(1189*D/n))+" (черта)":"")};
+  if(g.type==="bible"){var end=dstr(dnum(s)+n-1),m=readMap(list),rd=cntRead(m,0,66),rem=1189-rd,bar={v:rd,max:1189,mark:D>=1&&D<=n?Math.min(1189,Math.ceil(1189*D/n)):null,txt:rd+" из 1189 глав"+(D>=1&&D<=n?" · по плану к концу дня: "+Math.min(1189,Math.ceil(1189*D/n))+" (черта)":"")};
     L.push("Цель: прочитать Библию за "+n+" "+plur(n,"день","дня","дней")+", с "+fmtDay(s)+" по "+fmtDay(end)+".");
-    L.push("Прочитано "+rd+" из 1189 глав ("+pct(rd,1189)+"), осталось "+un("ch",rem)+".");
+    L.push("Прочитано "+rd+" из 1189 глав, осталось "+un("ch",rem)+".");
     if(!rem){L.push("Вся Библия прочитана. Цель достигнута!");return{lines:L,bar:bar,st:"ok"}}
     if(D<1){L.push("План начнётся "+fmtDay(s)+".");return{lines:L,bar:bar,st:"wait"}}
     if(D>n){L.push("Срок плана закончился "+fmtDay(end)+". Цель можно изменить.");return{lines:L,bar:bar,st:"late"}}
@@ -1820,7 +1800,7 @@ function goalFromSnap(snap){var d=snap.docs.find(function(x){return x.id==="goal
 /* 4.4 stats */
 function svgEl(t,a,txt){var e=document.createElementNS(SVGNS,t);for(var k in a)e.setAttribute(k,a[k]);if(txt!==undefined)e.textContent=txt;return e}
 function niceMax(m){if(m<=0)return 10;var p=Math.pow(10,Math.floor(Math.log10(m))),r=m/p;return (r<=1?1:r<=2?2:r<=5?5:10)*p}
-function bars(data,title,FW){var W=FW||Math.max(260,Math.min(720,($("stats").clientWidth||320))),H=180,L=36,R=6,T=18,Bt=26,iw=W-L-R,ih=H-T-Bt,mx=niceMax(Math.max.apply(null,data.map(function(d){return d.v}))),bw=iw/data.length;
+function bars(data,title,W){var H=180,L=36,R=6,T=18,Bt=26,iw=W-L-R,ih=H-T-Bt,mx=niceMax(Math.max.apply(null,data.map(function(d){return d.v}))),bw=iw/data.length;
   var s=svgEl("svg",{viewBox:"0 0 "+W+" "+H,width:W,height:H,role:"img","class":"chart"});s.appendChild(svgEl("title",{},title));
   [0,.5,1].forEach(function(f){var y=T+ih-ih*f;s.appendChild(svgEl("line",{x1:L,x2:W-R,y1:y,y2:y,"class":"grid"}));s.appendChild(svgEl("text",{x:L-5,y:y+4,"text-anchor":"end","class":"ax"},num(mx*f)))});
   var lw=Math.max.apply(null,data.map(function(d){return d.l.length}))*6.5+6,step=Math.max(1,Math.ceil(lw/bw));
@@ -1829,22 +1809,28 @@ function bars(data,title,FW){var W=FW||Math.max(260,Math.min(720,($("stats").cli
     s.appendChild(svgEl("rect",{x:x,y:T,width:bw,height:ih,fill:"transparent","class":"hit","data-tip":d.f+": "+num(d.v)+" мин"}));
     if(i%step===(data.length-1)%step)s.appendChild(svgEl("text",{x:x+bw/2,y:H-8,"text-anchor":"middle","class":"ax"},d.l))});
   return s}
-function statsData(list,today){list=readingEntries(list);today=today||todayStr();var T=dnum(today),wk={},mo={},wd=[0,0,0,0,0,0,0],days={},tot=0,first=null;
-  list.forEach(function(e){var s=secsOf(e);days[e.date]=1;if(!first||e.date<first)first=e.date;tot+=s;var dn=dnum(e.date),ws=dn-wdOf(e.date);wk[ws]=(wk[ws]||0)+s;mo[e.date.slice(0,7)]=(mo[e.date.slice(0,7)]||0)+s;wd[wdOf(e.date)]+=s});
-  var cw=T-wdOf(today),W=[],M=[],a=today.split("-"),y=+a[0],m=+a[1];
-  for(var i=11;i>=0;i--){var ws=cw-7*i,ds=dstr(ws);W.push({l:ds.slice(8)+"."+ds.slice(5,7),f:"Неделя с "+fmtDay(ds),v:(wk[ws]||0)/60})}
-  for(i=11;i>=0;i--){var mm=m-i,yy=y;while(mm<1){mm+=12;yy--}var k=yy+"-"+pad(mm);M.push({l:MS[mm-1],f:monthName(k),v:(mo[k]||0)/60})}
-  var nd=Object.keys(days).length,best=wd.indexOf(Math.max.apply(null,wd)),cal=first?Math.max(1,T-dnum(first)+1):0;
-  return{W:W,M:M,WD:WD.map(function(l,i){return{l:l,f:WDF[i],v:wd[i]/60}}),tot:tot,nd:nd,perRead:nd?tot/nd:0,perCal:cal?tot/cal:0,first:first,best:tot?best:-1}}
-function renderStats(){var st=$("stats"),d=statsData();st.innerHTML="";
-  var dl=h("dl","sts");function row(k,v){dl.appendChild(h("dt","",k));dl.appendChild(h("dd","",v))}
-  function t(s){s=Math.round(s);return fmtSecs(s).trim()||"0 мин"}
-  row("Общее время",t(d.tot));row("Дней чтения",String(d.nd));
-  row("В среднем за день чтения",t(d.perRead));row("В среднем за календарный день"+(d.first?" (с "+fmtDay(d.first)+")":""),d.first?t(d.perCal):"—");
-  row("Самый продуктивный день недели",d.best>=0?WDF[d.best]+" ("+t(d.WD[d.best].v*60)+")":"—");st.appendChild(dl);
-  if(!d.tot)st.appendChild(h("p","hint","Пока нет записей со временем чтения. Запустите таймер на вкладке «Читать» или укажите минуты в записи — здесь появятся графики."));
-  [["Минуты по неделям (последние 12 недель)",d.W],["Минуты по месяцам (последние 12 месяцев)",d.M],["Минуты по дням недели (за всё время)",d.WD]].forEach(function(c){st.appendChild(h("h3","",c[0]));var w=h("div","chartw");w.appendChild(bars(c[1],c[0]));st.appendChild(w)})}
-var rzT=null;window.addEventListener("resize",function(){clearTimeout(rzT);rzT=setTimeout(function(){if(!$("pP").hidden)renderStats()},200)});
+function statsData(list,today){
+  today=today||todayStr();
+  var dates=new Set(),total=0,secondsToday=0;
+  readingEntries(list).forEach(function(entry){
+    var seconds=secsOf(entry);
+    dates.add(entry.date);
+    total+=seconds;
+    if(entry.date===today)secondsToday+=seconds;
+  });
+  return {today:secondsToday,total:total,days:dates.size,average:dates.size?total/dates.size:0};
+}
+function renderStats(){
+  var list=$("stats"),data=statsData();
+  list.replaceChildren();
+  function time(seconds){
+    seconds=Math.round(seconds);
+    return (fmtSecs(seconds)+(seconds>=3600&&seconds%60?seconds%60+" сек":"")).trim()||"0 мин";
+  }
+  [["Минуты сегодня",time(data.today)],["Общее время",time(data.total)],
+    ["Дней чтения",String(data.days)],["В среднем за день чтения",time(data.average)]
+  ].forEach(function(row){list.append(h("dt","",row[0]),h("dd","",row[1]))});
+}
 
 /* goal card on «Читать» */
 function gLabel(g){return g.type==="plan"?"план «"+PLAN[g.plan].t+"»":un("min",g.n)+" в день"}
@@ -2084,8 +2070,8 @@ function planState(g,list,today){var p=PLAN[g.plan],days=planDays(p),N=days.leng
   return {p:p,days:days,mk:mk,N:N,D:D,total:total,done:done,dueN:Math.min(dueN,total),dueY:Math.min(dueY,total),k:k,missed:missed,firstUndone:firstUndone,grace:p.grace||[]}}
 function planInfo(g,list,today){var ps=planState(g,list,today),N=ps.N,D=ps.D,L=[],end=planDate(g,N),bar;
   L.push("План «"+ps.p.t+"»: "+N+" "+plur(N,"день","дня","дней")+", с "+fmtDay(g.start)+" по "+fmtDay(end)+".");
-  L.push("Прочитано "+ps.done+" из "+plRg(ps.total)+" ("+pct(ps.done,ps.total)+"), осталось "+plR(ps.total-ps.done)+".");
-  bar={v:ps.done,max:ps.total,mark:D>=1&&D<=N?ps.dueN:null,txt:"Прочитано "+ps.done+" из "+ps.total+" · "+pct(ps.done,ps.total)+(D>=1&&D<=N?" · день "+D+" из "+N:"")};
+  L.push("Прочитано "+ps.done+" из "+plRg(ps.total)+", осталось "+plR(ps.total-ps.done)+".");
+  bar={v:ps.done,max:ps.total,mark:D>=1&&D<=N?ps.dueN:null,txt:"Прочитано "+ps.done+" из "+ps.total+(D>=1&&D<=N?" · день "+D+" из "+N:"")};
   var r={lines:L,bar:bar,ps:ps};
   if(ps.done>=ps.total){L.push("План выполнен. Слава Богу!");r.st="ok";return r}
   if(D<1){L.push("План начнётся "+fmtDay(g.start)+".");r.st="wait";return r}
@@ -2403,13 +2389,13 @@ themeApply(themeCur());
 /* --- header --- */
 function streak(){var d={};readingEntries().forEach(function(e){if(e.date)d[e.date]=1});var t=dnum(todayStr());if(!d[dstr(t)])t--;var n=0;while(d[dstr(t)]){n++;t--}return n}
 function renderHdr(){var s=streak(),el=$("hStreak");el.hidden=!s;$("hStreakT").textContent=s+" "+plur(s,"день","дня","дней");el.title="Дней подряд с записями: "+s;el.setAttribute("aria-label",el.title);
-  /* мини-кольцо в шапке: одна цель — одно кольцо с процентом; обе — два концентрических кольца (внешнее — минуты сегодня, внутреннее — план), без числа */
+  /* мини-кольцо в шапке: одна цель — одно кольцо со счётчиком; обе — два концентрических кольца (внешнее — минуты сегодня, внутреннее — план), без числа */
   var hg=$("hGoal"),M=MG(),P=PG();hg.hidden=!M&&!P;if(!M&&!P)return;
   function arc(id,r,v){var C=2*Math.PI*r,c=$(id);c.style.strokeDasharray=C;c.style.strokeDashoffset=C*(1-v)}
   var mi=M?goalInfo(M).bar:null,pi=P?planInfo(P).bar:null,fr=function(b){return Math.min(1,b.max?b.v/b.max:0)},both=!!(M&&P),one=mi||pi;
   arc("hGoalC",14,fr(one));$("hGoalC2").style.display=$("hGoalB2").style.display=both?"":"none";if(both)arc("hGoalC2",8,fr(pi));
   var tx=[];if(mi)tx.push("Минуты сегодня: "+mi.txt);if(pi)tx.push("План: "+pi.txt);
-  $("hGoalT").textContent=both?"":Math.floor(fr(one)*100)+" %";$("hGoalT").hidden=both;hg.classList.toggle("ap-hg2",both);
+  $("hGoalT").textContent=both?"":one.v+" / "+one.max;$("hGoalT").hidden=both;hg.classList.toggle("ap-hg2",both);
   hg.setAttribute("aria-label","Цели. "+tx.join(". ")+". Открыть «Прогресс»");hg.title=tx.join("\n")}
 $("hGoal").onclick=openGoal;
 var hdrC=false;window.addEventListener("scroll",function(){var y=window.scrollY||0;if(!hdrC&&y>40){hdrC=true;$("hdr").classList.add("ap-compact")}else if(hdrC&&y<8){hdrC=false;$("hdr").classList.remove("ap-compact")}},{passive:true});
@@ -2427,28 +2413,16 @@ document.addEventListener("pointerup",function(ev){if(ev.pointerType==="mouse")r
 document.addEventListener("focusin",function(ev){var el=ev.target.closest&&ev.target.closest("[data-tip]");if(el)tipShow(el);else tipHide()});
 window.addEventListener("scroll",tipHide,{passive:true});
 
-/* --- rings --- */
-function ring(p,val,label,sub,fn){var el=h(fn?"button":"div","ap-ring");if(fn){el.type="button";el.onclick=fn}var w=h("div","ap-rw"),C=2*Math.PI*42,s=svgEl("svg",{viewBox:"0 0 100 100","aria-hidden":"true"});
-  s.appendChild(svgEl("circle",{cx:50,cy:50,r:42,"class":"ap-rbg"}));var fg=svgEl("circle",{cx:50,cy:50,r:42,"class":"ap-rfg"});fg.style.strokeDasharray=C;fg.style.strokeDashoffset=C;s.appendChild(fg);w.appendChild(s);w.appendChild(h("span","ap-rv",val));el.appendChild(w);
-  el.appendChild(h("span","ap-rl",label));el.appendChild(h("span","ap-rs",sub));el.setAttribute("aria-label",label+": "+val+". "+sub);
-  requestAnimationFrame(function(){requestAnimationFrame(function(){fg.style.strokeDashoffset=C*(1-Math.max(0,Math.min(1,p)))})});return el}
-function renderRings(){var box=$("rings"),m=readMap(),ot=cntRead(m,0,39),nt=cntRead(m,39,66);box.innerHTML="";
-  var M=MG(),P=PG(),gg=function(){var g=$("goalH");if(g.scrollIntoView)g.scrollIntoView({block:"start"})};
-  if(M){var b=goalInfo(M).bar,p=b.max?Math.min(1,b.v/b.max):0;box.appendChild(ring(p,Math.floor(p*100)+" %","Минуты сегодня",b.v+" из "+b.max+" мин",gg))}
-  if(P){var b2=planInfo(P).bar,p2=b2.max?Math.min(1,b2.v/b2.max):0;box.appendChild(ring(p2,Math.floor(p2*100)+" %","План чтения",b2.v+" из "+b2.max+" "+plur(b2.max,"чтения","чтений","чтений"),gg))}
-  if(!M&&!P)box.appendChild(ring(0,"—","Цели","не заданы",gg));
-  box.appendChild(ring(ot/929,pct(ot,929),"Əhdi-Ətiq",ot+" из 929 глав"));box.appendChild(ring(nt/260,pct(nt,260),"Əhdi-Cədid",nt+" из 260 глав"));box.appendChild(ring((ot+nt)/1189,pct(ot+nt,1189),"Вся Библия",(ot+nt)+" из 1189 глав"))}
-
 /* --- tiles --- */
 var tileOpen="";
 function renderTiles(){var box=$("tiles"),m=readMap();box.innerHTML="";
   [["Əhdi-Ətiq",0,39,929],["Əhdi-Cədid",39,66,260]].forEach(function(t){var hd=h("div","ap-tsec");hd.appendChild(h("span","",t[0]));hd.appendChild(h("small","",cntRead(m,t[1],t[2])+" из "+t[3]+" глав"));box.appendChild(hd);
     var g=h("div","ap-tgrid"),dw=h("div");B.slice(t[1],t[2]).forEach(function(b){var n=Object.keys(m[b.k]||{}).length,p=n/b.c,op=n?.18+.82*p:0,tl=h("button","ap-tile"+(b.c>=40?" s3":b.c>=20?" s2":"")+(op>.55?" ap-dk":""));tl.type="button";
-      var f=h("span","ap-tf");f.style.opacity=op;tl.appendChild(f);tl.appendChild(h("span","ap-tn",b.n));tl.appendChild(h("span","ap-tp",n+"/"+b.c+" · "+Math.floor(p*100)+" %"));
-      var tip=b.n+": "+n+" из "+b.c+" "+plur(b.c,"главы","глав","глав")+" · "+pct(n,b.c);tl.setAttribute("data-tip",tip);tl.setAttribute("aria-label",tip);tl.setAttribute("aria-expanded",tileOpen===b.k);
+      var f=h("span","ap-tf");f.style.opacity=op;tl.appendChild(f);tl.appendChild(h("span","ap-tn",b.n));tl.appendChild(h("span","ap-tp",n+"/"+b.c));
+      var tip=b.n+": "+n+" из "+b.c+" "+plur(b.c,"главы","глав","глав");tl.setAttribute("data-tip",tip);tl.setAttribute("aria-label",tip);tl.setAttribute("aria-expanded",tileOpen===b.k);
       tl.onclick=function(){tileOpen=tileOpen===b.k?"":b.k;renderTiles();var nt=box.querySelector('.ap-tile[aria-expanded="true"]');if(nt)nt.focus({preventScroll:true})};g.appendChild(tl);
       if(tileOpen===b.k)dw.appendChild(tileDet(b,m))});box.appendChild(g);box.appendChild(dw)})}
-function tileDet(b,m){var rd=m[b.k]||{},n=Object.keys(rd).length,d=h("div","ap-tdet"),hd=h("div","bkh");hd.appendChild(h("span","bn",b.n));hd.appendChild(h("small","","прочитано "+n+" из "+b.c+" · "+pct(n,b.c)));d.appendChild(hd);
+function tileDet(b,m){var rd=m[b.k]||{},n=Object.keys(rd).length,d=h("div","ap-tdet"),hd=h("div","bkh");hd.appendChild(h("span","bn",b.n));hd.appendChild(h("small","","прочитано "+n+" из "+b.c));d.appendChild(hd);
   var cs=h("div","cells");for(var c=1;c<=b.c;c++){var lab=b.n+" "+c,x;
     if(rd[c]){x=h("button","cell rd");x.type="button";x.title=lab+": прочитано, показать записи";x.setAttribute("aria-label",x.title);x.onclick=(function(k,c){return function(){showPassage(k,c)}})(b.k,c)}
     else{x=h("span","cell");x.title=lab+": не прочитано"}if(c%10===0)x.classList.add("t");cs.appendChild(x)}d.appendChild(cs);

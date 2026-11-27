@@ -112,7 +112,6 @@ textarea#fNote{overflow-y:hidden}
 #gMsg{color:var(--mute)}
 .sts{gap:4px 12px;margin:0;font-size:15px}
 .sts dt{color:var(--mute)}.sts dd{margin:0;text-align:right;font-variant-numeric:tabular-nums}
-.chartw{overflow:hidden}
 .chart{display:block;max-width:100%;height:auto}
 .chart .grid{stroke:var(--rule);stroke-width:1}
 .chart .bar{fill:var(--accent)}
