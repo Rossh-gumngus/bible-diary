@@ -237,8 +237,7 @@ function renderFocusPlan(){
     section.hidden=!position.length;
     box.replaceChildren();
     if(!position.length)return;
-    if(!group){box.appendChild(h("p","hint","Это последний незавершённый день плана."));return}
-    box.appendChild(h("p","hint","День "+group.day+" по плану"));
+    if(!group){box.appendChild(h("p","hint","Дальше отрывков нет."));return}
     var list=h("ul");
     group.items.forEach(function(item){list.appendChild(h("li","",bName(item.b)+" "+itLab(item)))});
     box.appendChild(list);

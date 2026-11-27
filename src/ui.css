@@ -201,6 +201,7 @@ button{font-family:inherit}
 .ap-focus-grid{display:grid;justify-items:center;align-items:center;width:100%;max-width:1440px;gap:20px}
 .ap-focus-timer{display:grid;justify-items:center;gap:16px;min-width:0}
 .ap-focus-grid .ap-focus-passages{width:100%;max-width:400px;min-width:0;padding:8px 16px;text-align:left;background:transparent;border:0;box-shadow:none;backdrop-filter:none}
+#fsNext{text-align:right}
 .ap-focus-passages .ap-h3{margin:0 0 8px;font-size:22px}
 .ap-focus-passages .hint{margin:0 0 10px;font-size:16px}
 .ap-focus-passages ul{font-size:20px;line-height:1.35;list-style:none;padding:0;margin:0;overflow-wrap:anywhere}

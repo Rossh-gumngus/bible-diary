@@ -476,6 +476,7 @@ button{font-family:inherit}
 .ap-focus-grid{display:grid;justify-items:center;align-items:center;width:100%;max-width:1440px;gap:20px}
 .ap-focus-timer{display:grid;justify-items:center;gap:16px;min-width:0}
 .ap-focus-grid .ap-focus-passages{width:100%;max-width:400px;min-width:0;padding:8px 16px;text-align:left;background:transparent;border:0;box-shadow:none;backdrop-filter:none}
+#fsNext{text-align:right}
 .ap-focus-passages .ap-h3{margin:0 0 8px;font-size:22px}
 .ap-focus-passages .hint{margin:0 0 10px;font-size:16px}
 .ap-focus-passages ul{font-size:20px;line-height:1.35;list-style:none;padding:0;margin:0;overflow-wrap:anywhere}
@@ -1263,7 +1264,7 @@ button:focus-visible,summary:focus-visible,[tabindex]:focus-visible{outline:2px 
         <div class="ap-fbtns"><button type="button" class="btn ap-big" id="fsStart" data-tstart>Старт</button><button type="button" class="btn ap-big main" id="fsDone">Завершить и записать</button></div>
       </div>
       <section class="ap-focus-passages" id="fsNext" aria-labelledby="fsNextTitle" hidden>
-        <h2 class="ap-h3" id="fsNextTitle">Следом по плану</h2>
+        <h2 class="ap-h3" id="fsNextTitle">Дальше</h2>
         <div id="fsNextItems"></div>
       </section>
     </div>
@@ -2525,8 +2526,7 @@ function renderFocusPlan(){
     section.hidden=!position.length;
     box.replaceChildren();
     if(!position.length)return;
-    if(!group){box.appendChild(h("p","hint","Это последний незавершённый день плана."));return}
-    box.appendChild(h("p","hint","День "+group.day+" по плану"));
+    if(!group){box.appendChild(h("p","hint","Дальше отрывков нет."));return}
     var list=h("ul");
     group.items.forEach(function(item){list.appendChild(h("li","",bName(item.b)+" "+itLab(item)))});
     box.appendChild(list);
