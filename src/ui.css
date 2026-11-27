@@ -200,10 +200,10 @@ button{font-family:inherit}
 .ap-focus{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100%;padding:calc(64px + env(safe-area-inset-top,0px)) 20px calc(24px + env(safe-area-inset-bottom,0px));gap:18px;text-align:center;flex:1 1 auto}
 .ap-focus-grid{display:grid;justify-items:center;align-items:center;width:100%;max-width:1440px;gap:20px}
 .ap-focus-timer{display:grid;justify-items:center;gap:16px;min-width:0}
-.ap-focus-passages{width:100%;max-width:400px;min-width:0;padding:16px;text-align:left}
-.ap-focus-passages .ap-h3{margin:0 0 6px}
+.ap-focus-passages{width:100%;max-width:400px;min-width:0;padding:8px 16px;text-align:left}
+.ap-focus-passages .ap-h3{margin:0 0 6px;font-size:19px}
 .ap-focus-passages .hint{margin:0 0 8px}
-.ap-focus-passages ul{list-style:none;padding:0;margin:0;overflow-wrap:anywhere}
+.ap-focus-passages ul{font-size:17px;list-style:none;padding:0;margin:0;overflow-wrap:anywhere}
 .ap-focus-passages li+li{margin-top:6px}
 @media (min-width:900px){
   .ap-focus-grid.with-plan{grid-template-columns:minmax(0,1fr) minmax(0,1.5fr) minmax(0,1fr);align-items:center}
