@@ -198,6 +198,21 @@ button{font-family:inherit}
 .ap-ap{font-size:13px;color:var(--mute);margin:6px 0 0}
 /* focus */
 .ap-focus{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100%;padding:calc(64px + env(safe-area-inset-top,0px)) 20px calc(24px + env(safe-area-inset-bottom,0px));gap:18px;text-align:center;flex:1 1 auto}
+.ap-focus-grid{display:grid;justify-items:center;align-items:center;width:100%;max-width:1440px;gap:20px}
+.ap-focus-timer{display:grid;justify-items:center;gap:16px;min-width:0}
+.ap-focus-grid .ap-focus-passages{width:100%;max-width:400px;min-width:0;padding:8px 16px;text-align:left;background:transparent;border:0;box-shadow:none;backdrop-filter:none}
+#fsNext{text-align:right}
+.ap-focus-passages .ap-h3{margin:0 0 8px;font-size:22px}
+.ap-focus-passages .hint{margin:0 0 10px;font-size:16px}
+.ap-focus-passages ul{font-size:20px;line-height:1.35;list-style:none;padding:0;margin:0;overflow-wrap:anywhere}
+.ap-focus-passages li+li{margin-top:6px}
+@media (min-width:900px){
+  .ap-focus-grid.with-plan{grid-template-columns:minmax(0,1fr) minmax(0,1.5fr) minmax(0,1fr);align-items:center}
+  .with-plan .ap-fclk{font-size:clamp(54px,8vw,128px)}
+}
+@media (max-width:899px){
+  .ap-focus-grid.with-plan .ap-focus-timer{grid-row:1}
+}
 .ap-fhead{position:absolute;top:calc(12px + env(safe-area-inset-top,0px));left:16px;right:16px;display:flex;justify-content:space-between;align-items:center}
 .ap-flbl{color:var(--mute);font-style:italic}
 .ap-fclk{font-size:clamp(54px,17vw,128px);font-variant-numeric:tabular-nums;color:var(--accent);line-height:1}

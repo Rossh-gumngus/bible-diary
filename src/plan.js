@@ -22,6 +22,37 @@ function planState(g,list,today){var p=PLAN[g.plan],days=planDays(p),N=days.leng
   mk.forEach(function(d,i){var n=d.length,dn=d.filter(Boolean).length;total+=n;done+=dn;if(i<D)dueN+=n;if(i<D-1)dueY+=n;if(pref&&dn===n)k=i+1;else pref=false;if(!firstUndone&&dn<n)firstUndone=i+1});
   var missed=[];for(var i=0;i<Math.min(D-1,N);i++)days[i].forEach(function(it,j){if(!mk[i][j])missed.push(it)});
   return {p:p,days:days,mk:mk,N:N,D:D,total:total,done:done,dueN:Math.min(dueN,total),dueY:Math.min(dueY,total),k:k,missed:missed,firstUndone:firstUndone,grace:p.grace||[]}}
+function focusPlanPosition(goal,list){
+  var covered=new Map();
+  readingEntries(list).forEach(function(entry){
+    if(entry.date<goal.start)return;
+    refChapters(entry.refs).forEach(function(ref){
+      var chapter=+ref.c,limit=maxV(ref.b,chapter),key=ref.b+":"+chapter;
+      if(!limit)return;
+      if(!covered.has(key))covered.set(key,new Uint8Array(limit+1));
+      var verses=covered.get(key);
+      vsRanges(ref.b,chapter,ref.v).forEach(function(range){
+        if(Number.isInteger(range[0])&&Number.isInteger(range[1])){
+          verses.fill(1,Math.min(range[0],limit+1),Math.min(range[1]+1,limit+1));
+        }
+      });
+    });
+  });
+  function done(part){
+    var verses=covered.get(part.b+":"+(+part.c));
+    return !!verses&&vsRanges(part.b,+part.c,part.v).every(function(range){
+      for(var verse=range[0];verse<=range[1];verse++)if(!verses[verse])return false;
+      return true;
+    });
+  }
+  var pending=[];
+  for(var [index,items] of planDays(PLAN[goal.plan]).entries()){
+    var remaining=items.filter(function(item){return !(item.parts||[item]).every(done)});
+    if(remaining.length)pending.push({day:index+1,items:remaining});
+    if(pending.length===2)break;
+  }
+  return pending;
+}
 function planInfo(g,list,today){var ps=planState(g,list,today),N=ps.N,D=ps.D,L=[],end=planDate(g,N),bar;
   L.push("План «"+ps.p.t+"»: "+N+" "+plur(N,"день","дня","дней")+", с "+fmtDay(g.start)+" по "+fmtDay(end)+".");
   L.push("Прочитано "+ps.done+" из "+plRg(ps.total)+", осталось "+plR(ps.total-ps.done)+".");

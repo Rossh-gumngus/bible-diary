@@ -308,7 +308,7 @@ function match(e){
   return fold([e.key,e.note,(e.tags||[]).join(" "),(e.refs||[]).map(refLabel).join(" ")].join(" ")).indexOf(q)>=0}
 
 /* list */
-function render(){renderList();if(curTab==="P")renderProg();if(curTab==="Y")renderYB();if(curTab==="W")renderRecent();renderGoalCard();renderHdr();achCheck();if(det)renderDetail()}
+function render(){renderList();if(curTab==="P")renderProg();if(curTab==="Y")renderYB();if(curTab==="W")renderRecent();renderGoalCard();renderHdr();achCheck();if(findM($("focusBox")))renderFocusPlan();if(det)renderDetail()}
 var curList=[];
 function cmpDesc(a,b){return a.date<b.date?1:a.date>b.date?-1:(a.id<b.id?1:-1)}
 function renderList(){

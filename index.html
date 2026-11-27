@@ -473,6 +473,21 @@ button{font-family:inherit}
 .ap-ap{font-size:13px;color:var(--mute);margin:6px 0 0}
 /* focus */
 .ap-focus{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100%;padding:calc(64px + env(safe-area-inset-top,0px)) 20px calc(24px + env(safe-area-inset-bottom,0px));gap:18px;text-align:center;flex:1 1 auto}
+.ap-focus-grid{display:grid;justify-items:center;align-items:center;width:100%;max-width:1440px;gap:20px}
+.ap-focus-timer{display:grid;justify-items:center;gap:16px;min-width:0}
+.ap-focus-grid .ap-focus-passages{width:100%;max-width:400px;min-width:0;padding:8px 16px;text-align:left;background:transparent;border:0;box-shadow:none;backdrop-filter:none}
+#fsNext{text-align:right}
+.ap-focus-passages .ap-h3{margin:0 0 8px;font-size:22px}
+.ap-focus-passages .hint{margin:0 0 10px;font-size:16px}
+.ap-focus-passages ul{font-size:20px;line-height:1.35;list-style:none;padding:0;margin:0;overflow-wrap:anywhere}
+.ap-focus-passages li+li{margin-top:6px}
+@media (min-width:900px){
+  .ap-focus-grid.with-plan{grid-template-columns:minmax(0,1fr) minmax(0,1.5fr) minmax(0,1fr);align-items:center}
+  .with-plan .ap-fclk{font-size:clamp(54px,8vw,128px)}
+}
+@media (max-width:899px){
+  .ap-focus-grid.with-plan .ap-focus-timer{grid-row:1}
+}
 .ap-fhead{position:absolute;top:calc(12px + env(safe-area-inset-top,0px));left:16px;right:16px;display:flex;justify-content:space-between;align-items:center}
 .ap-flbl{color:var(--mute);font-style:italic}
 .ap-fclk{font-size:clamp(54px,17vw,128px);font-variant-numeric:tabular-nums;color:var(--accent);line-height:1}
@@ -1238,9 +1253,21 @@ button:focus-visible,summary:focus-visible,[tabindex]:focus-visible{outline:2px 
 
   <div class="ap-focus" id="focusBox">
     <div class="ap-fhead"><span class="ap-flbl" id="focusTitle">Режим чтения</span><button type="button" class="ap-x" id="fsExit" aria-label="Выйти из режима чтения">×</button></div>
-    <div class="ap-fclk" id="fsClk" role="timer" aria-live="off">00:00:00</div>
-    <div class="ap-fsub" id="fsSub"></div>
-    <div class="ap-fbtns"><button type="button" class="btn ap-big" id="fsStart" data-tstart>Старт</button><button type="button" class="btn ap-big main" id="fsDone">Завершить и записать</button></div>
+    <div class="ap-focus-grid" id="fsLayout">
+      <section class="ap-focus-passages" id="fsCurrent" aria-labelledby="fsCurrentTitle" hidden>
+        <h2 class="ap-h3" id="fsCurrentTitle">Сейчас</h2>
+        <div id="fsCurrentItems"></div>
+      </section>
+      <div class="ap-focus-timer">
+        <div class="ap-fclk" id="fsClk" role="timer" aria-live="off">00:00:00</div>
+        <div class="ap-fsub" id="fsSub"></div>
+        <div class="ap-fbtns"><button type="button" class="btn ap-big" id="fsStart" data-tstart>Старт</button><button type="button" class="btn ap-big main" id="fsDone">Завершить и записать</button></div>
+      </div>
+      <section class="ap-focus-passages" id="fsNext" aria-labelledby="fsNextTitle" hidden>
+        <h2 class="ap-h3" id="fsNextTitle">Дальше</h2>
+        <div id="fsNextItems"></div>
+      </section>
+    </div>
   </div>
 </div>
 
@@ -1564,7 +1591,7 @@ function match(e){
   return fold([e.key,e.note,(e.tags||[]).join(" "),(e.refs||[]).map(refLabel).join(" ")].join(" ")).indexOf(q)>=0}
 
 /* list */
-function render(){renderList();if(curTab==="P")renderProg();if(curTab==="Y")renderYB();if(curTab==="W")renderRecent();renderGoalCard();renderHdr();achCheck();if(det)renderDetail()}
+function render(){renderList();if(curTab==="P")renderProg();if(curTab==="Y")renderYB();if(curTab==="W")renderRecent();renderGoalCard();renderHdr();achCheck();if(findM($("focusBox")))renderFocusPlan();if(det)renderDetail()}
 var curList=[];
 function cmpDesc(a,b){return a.date<b.date?1:a.date>b.date?-1:(a.id<b.id?1:-1)}
 function renderList(){
@@ -2160,6 +2187,37 @@ function planState(g,list,today){var p=PLAN[g.plan],days=planDays(p),N=days.leng
   mk.forEach(function(d,i){var n=d.length,dn=d.filter(Boolean).length;total+=n;done+=dn;if(i<D)dueN+=n;if(i<D-1)dueY+=n;if(pref&&dn===n)k=i+1;else pref=false;if(!firstUndone&&dn<n)firstUndone=i+1});
   var missed=[];for(var i=0;i<Math.min(D-1,N);i++)days[i].forEach(function(it,j){if(!mk[i][j])missed.push(it)});
   return {p:p,days:days,mk:mk,N:N,D:D,total:total,done:done,dueN:Math.min(dueN,total),dueY:Math.min(dueY,total),k:k,missed:missed,firstUndone:firstUndone,grace:p.grace||[]}}
+function focusPlanPosition(goal,list){
+  var covered=new Map();
+  readingEntries(list).forEach(function(entry){
+    if(entry.date<goal.start)return;
+    refChapters(entry.refs).forEach(function(ref){
+      var chapter=+ref.c,limit=maxV(ref.b,chapter),key=ref.b+":"+chapter;
+      if(!limit)return;
+      if(!covered.has(key))covered.set(key,new Uint8Array(limit+1));
+      var verses=covered.get(key);
+      vsRanges(ref.b,chapter,ref.v).forEach(function(range){
+        if(Number.isInteger(range[0])&&Number.isInteger(range[1])){
+          verses.fill(1,Math.min(range[0],limit+1),Math.min(range[1]+1,limit+1));
+        }
+      });
+    });
+  });
+  function done(part){
+    var verses=covered.get(part.b+":"+(+part.c));
+    return !!verses&&vsRanges(part.b,+part.c,part.v).every(function(range){
+      for(var verse=range[0];verse<=range[1];verse++)if(!verses[verse])return false;
+      return true;
+    });
+  }
+  var pending=[];
+  for(var [index,items] of planDays(PLAN[goal.plan]).entries()){
+    var remaining=items.filter(function(item){return !(item.parts||[item]).every(done)});
+    if(remaining.length)pending.push({day:index+1,items:remaining});
+    if(pending.length===2)break;
+  }
+  return pending;
+}
 function planInfo(g,list,today){var ps=planState(g,list,today),N=ps.N,D=ps.D,L=[],end=planDate(g,N),bar;
   L.push("План «"+ps.p.t+"»: "+N+" "+plur(N,"день","дня","дней")+", с "+fmtDay(g.start)+" по "+fmtDay(end)+".");
   L.push("Прочитано "+ps.done+" из "+plRg(ps.total)+", осталось "+plR(ps.total-ps.done)+".");
@@ -2456,7 +2514,26 @@ function openPicker(o){var st={step:"b",b:null,c:0,rg:[],start:null,mc:false,cs:
 
 /* --- focus mode --- */
 var wake=null;
-function openFocus(){var M=MG(),P=PG(),t=[];if(M)t.push("Минуты в день: "+goalInfo(M).bar.txt);if(P)t.push("«"+PLAN[P.plan].t+"»: "+planInfo(P).bar.txt);$("fsSub").textContent=t.length?t.join(" · "):"Спокойного чтения. Таймер продолжит идти, даже если закрыть этот экран.";
+function renderFocusPlan(){
+  var minutes=MG(),plan=PG(),status=[];
+  if(minutes)status.push(goalInfo(minutes).bar.txt);
+  var position=plan?focusPlanPosition(plan):[];
+  if(plan)status.push(PLAN[plan.plan].t+(position.length?"":" · план выполнен"));
+  say("fsSub",status.join(" · ")||"Таймер продолжит идти, даже если закрыть этот экран.");
+  $("fsLayout").classList.toggle("with-plan",!!position.length);
+  ["Current","Next"].forEach(function(side,index){
+    var section=$("fs"+side),box=$("fs"+side+"Items"),group=position[index];
+    section.hidden=!position.length;
+    box.replaceChildren();
+    if(!position.length)return;
+    if(!group){box.appendChild(h("p","hint","Дальше отрывков нет."));return}
+    var list=h("ul");
+    group.items.forEach(function(item){list.appendChild(h("li","",bName(item.b)+" "+itLab(item)))});
+    box.appendChild(list);
+  });
+}
+function openFocus(){
+  renderFocusPlan();
   openModal($("focusBox"),{variant:"full",label:"focusTitle",keep:true,focus:"#fsStart",onClose:function(){if(wake){try{wake.release()}catch(e){}wake=null}}});
   try{if(navigator.wakeLock)navigator.wakeLock.request("screen").then(function(w){wake=w},function(){})}catch(e){}}
 $("focusBtn").onclick=openFocus;
