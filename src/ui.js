@@ -312,33 +312,120 @@ function renderHeat(){var bd=byDate(),cy=+todayStr().slice(0,4),ys=Object.keys(b
   if(heatY===cy)requestAnimationFrame(function(){w.scrollLeft=w.scrollWidth})}
 
 /* --- achievements --- */
-var ACH=[["first","Первая запись","Дневник начат",function(s){return [s.n,1]},"M12 20V8M8 12l4-4 4 4M5 4h14"],
-  ["e10","10 записей","Десять записей в дневнике",function(s){return [s.n,10]},"M6 4h12v16H6zM9 8h6M9 12h6M9 16h4"],
-  ["e50","50 записей","Полсотни записей",function(s){return [s.n,50]},"M6 4h12v16H6zM9 8h6M9 12h6M9 16h4"],
-  ["e100","100 записей","Сотня записей",function(s){return [s.n,100]},"M6 4h12v16H6zM9 8h6M9 12h6M9 16h4"],
-  ["book","Первая книга","Прочитаны все главы одной книги",function(s){return [s.books,1]},"M4 5c3-1.5 5-1.5 8 0v14c-3-1.5-5-1.5-8 0zM12 5c3-1.5 5-1.5 8 0v14c-3-1.5-5-1.5-8 0z"],
-  ["gosp","Четыре Евангелия","Matta, Mark, Luka и Yəhya",function(s){return [s.gosp,89]},"M12 3v18M6 9h12"],
-  ["pent","Пятикнижие","От Yaradılış до Qanunun Təkrarı",function(s){return [s.pent,187]},"M4 20h16M6 20V9M10 20V9M14 20V9M18 20V9M3 9l9-5 9 5z"],
-  ["psa","Вся Zəbur","Все 150 псалмов",function(s){return [s.psa,150]},"M9 18V6l10-2v12M9 18a3 3 0 1 1-6 0 3 3 0 0 1 6 0zM19 16a3 3 0 1 1-6 0 3 3 0 0 1 6 0z"],
-  ["nt","Əhdi-Cədid","Все 260 глав",function(s){return [s.nt,260]},"M12 2l2.9 6.3 6.9.7-5.2 4.6 1.5 6.8L12 17l-6.1 3.4 1.5-6.8L2.2 9l6.9-.7z"],
-  ["ot","Əhdi-Ətiq","Все 929 глав",function(s){return [s.ot,929]},"M12 2l2.9 6.3 6.9.7-5.2 4.6 1.5 6.8L12 17l-6.1 3.4 1.5-6.8L2.2 9l6.9-.7z"],
-  ["bible","Вся Библия","Все 1189 глав",function(s){return [s.ot+s.nt,1189]},"M5 3h11a3 3 0 0 1 3 3v15H8a3 3 0 0 1-3-3zM5 18a3 3 0 0 1 3-3h11M12 6v6M9.5 8.5h5"],
-  ["h10","10 часов чтения","Суммарное время по записям",function(s){return [Math.floor(s.secs/3600),10]},"M12 7v5l3 2M12 3a9 9 0 1 1 0 18 9 9 0 0 1 0-18z"],
-  ["d30","30 дней чтения","Дни с записями, не обязательно подряд",function(s){return [s.nd,30]},"M4 6h16v14H4zM4 10h16M8 3v5M16 3v5"]];
-function achStats(){var list=readingEntries(),m=readMap(list),s={n:list.length,ot:cntRead(m,0,39),nt:cntRead(m,39,66),books:0,secs:0,nd:0,gosp:0,pent:0,psa:Object.keys(m.PSA||{}).length},d={};
-  B.forEach(function(b,i){var n=Object.keys(m[b.k]||{}).length;if(n===b.c)s.books++;if(i<5)s.pent+=n;if(i>=39&&i<43)s.gosp+=n});
-  list.forEach(function(e){s.secs+=secsOf(e);if(e.date)d[e.date]=1});s.nd=Object.keys(d).length;return s}
-function achList(){var s=achStats();return ACH.map(function(a){var p=a[3](s);return {id:a[0],t:a[1],d:a[2],v:Math.min(p[0],p[1]),max:p[1],on:p[0]>=p[1],ic:a[4]}})}
-function achCheck(){if(!dataReady)return;var L=achList(),on=L.filter(function(a){return a.on}).map(function(a){return a.id}),st=null;
-  try{st=JSON.parse(localStorage.getItem("bd6-ach")||"null")}catch(e){}
-  if(!Array.isArray(st)){lsSet("bd6-ach",JSON.stringify(on));return}
-  var nw=on.filter(function(id){return st.indexOf(id)<0});if(!nw.length)return;
-  lsSet("bd6-ach",JSON.stringify(st.concat(nw)));nw.forEach(function(id){var a=L.find(function(x){return x.id===id});toast("Новое достижение: «"+a.t+"»",{cls:"ap-achv"})});if(curTab==="P")renderAch()}
-function renderAch(){var box=$("ach");box.innerHTML="";var L=achList(),n=L.filter(function(a){return a.on}).length;
-  box.setAttribute("aria-label","Достижения: получено "+n+" из "+L.length);
-  L.forEach(function(a){var d=h("div","ap-a "+(a.on?"ap-on":"ap-off")),ic=h("div","ap-ai");ic.appendChild(svgIcon([a.on?a.ic:"M7 11V8a5 5 0 0 1 10 0v3M5 11h14v9H5z"]));d.appendChild(ic);
-    var tx=h("div");tx.appendChild(h("div","ap-at",a.t));tx.appendChild(h("div","ap-ad",a.d));tx.appendChild(h("div","ap-ap",a.on?"Получено":a.v+" из "+a.max));d.appendChild(tx);
-    d.setAttribute("aria-label",a.t+": "+(a.on?"получено":"пока нет, "+a.v+" из "+a.max));box.appendChild(d)})}
+var ACH = [
+  {id:"bible",title:"Библия целиком",unit:"times",levels:[1,2,3,5,10]},
+  {id:"ot",title:"Ветхий Завет целиком",unit:"times",levels:[1,2,3,5,10]},
+  {id:"nt",title:"Новый Завет целиком",unit:"times",levels:[1,2,3,5,10,20]},
+  {id:"days",title:"Дней чтения",unit:"days",levels:[7,30,90,180,365,730]},
+  {id:"streak",title:"Дней чтения подряд",unit:"days",levels:[3,7,14,30,60,90,180,365]},
+  {id:"total",title:"Общее время чтения",unit:"hours",levels:[1,5,10,25,50,100,250,500]},
+  {id:"record",title:"Самое долгое чтение за день",unit:"minutes",levels:[15,30,45,60,90,120]}
+];
+
+function completeReadings(readings){
+  var coverage=new Map();
+  readings.forEach(function(entry){
+    var chapters=new Map();
+    refChapters(entry.refs).forEach(function(ref){
+      var end=maxV(ref.b,+ref.c);
+      if(!end)return;
+      var key=ref.b+":"+(+ref.c);
+      if(!chapters.has(key))chapters.set(key,{end:end,ranges:[]});
+      vsRanges(ref.b,+ref.c,ref.v).forEach(function(range){
+        if(Number.isInteger(range[0])&&Number.isInteger(range[1])&&range[0]<=end)chapters.get(key).ranges.push([range[0],Math.min(range[1],end)]);
+      });
+    });
+    // Count overlapping references to a verse only once within one reading record.
+    chapters.forEach(function(chapter,key){
+      if(!chapter.ranges.length)return;
+      if(!coverage.has(key))coverage.set(key,new Int32Array(chapter.end+2));
+      var marks=coverage.get(key),last=0;
+      chapter.ranges.sort(function(a,b){return a[0]-b[0]}).forEach(function(range){
+        var start=Math.max(last+1,range[0]),end=range[1];
+        if(start>end)return;
+        marks[start]++;
+        marks[end+1]--;
+        last=end;
+      });
+    });
+  });
+  function completed(books){
+    var minimum=Infinity;
+    for(var book of books){
+      for(var chapter=1;chapter<=book.c;chapter++){
+        var marks=coverage.get(book.k+":"+chapter),count=0;
+        if(!marks)return 0;
+        for(var verse=1;verse<marks.length-1;verse++){
+          count+=marks[verse];
+          minimum=Math.min(count,minimum);
+          if(!minimum)return 0;
+        }
+      }
+    }
+    return minimum;
+  }
+  var ot=completed(B.slice(0,39)),nt=completed(B.slice(39));
+  return {bible:Math.min(ot,nt),ot:ot,nt:nt};
+}
+
+function achStats(list,today){
+  var readings=readingEntries(list),daily=new Map(),total=0,record=0;
+  readings.forEach(function(entry){
+    var seconds=secsOf(entry),day=(daily.get(entry.date)||0)+seconds;
+    daily.set(entry.date,day);
+    total+=seconds;
+    record=Math.max(record,day);
+  });
+  return Object.assign(completeReadings(readings),{
+    days:daily.size,streak:longestStreak(new Set(daily.keys()),today||todayStr()),total:total,record:record
+  });
+}
+function achValue(value,unit){
+  if(unit==="days")return value+" "+plur(value,"день","дня","дней");
+  if(unit==="times")return value+" "+plur(value,"раз","раза","раз");
+  return (fmtSecs(value)+(value>=3600&&value%60?value%60+" сек":"")).trim()||"0 мин";
+}
+function achList(stats){
+  return ACH.map(function(a){
+    var scale=a.unit==="hours"?3600:a.unit==="minutes"?60:1;
+    var value=stats[a.id],earned=a.levels.filter(function(level){return value>=level*scale});
+    return {id:a.id,title:a.title,value:achValue(value,a.unit),earned:earned,
+      next:a.levels[earned.length],unit:a.unit,scale:scale};
+  });
+}
+function achCheck(){
+  if(!dataReady)return;
+  var list=achList(achStats()),stored=null;
+  try{stored=JSON.parse(localStorage.getItem("bd6-ach")||"null")}catch(e){}
+  var previous=Array.isArray(stored)?stored:[];
+  var known=new Set(previous),announced=known.has("level:initialized");
+  known.add("level:initialized");
+  list.forEach(function(a){
+    var latest=null;
+    a.earned.forEach(function(level){
+      var id="level:"+a.id+":"+level;
+      if(!known.has(id)){known.add(id);latest=level}
+    });
+    if(announced&&latest!==null)toast(a.title+" · "+achValue(latest*a.scale,a.unit),{cls:"ap-achv"});
+  });
+  if(known.size!==previous.length||!stored)lsSet("bd6-ach",JSON.stringify(Array.from(known)));
+}
+function renderAch(){
+  var box=$("ach");
+  box.replaceChildren();
+  achList(achStats()).forEach(function(a){
+    var row=h("div","ap-a"),top=h("div","ap-ahead");
+    top.append(h("h3","ap-at",a.title),h("strong","ap-av",a.value));
+    row.appendChild(top);
+    if(a.earned.length){
+      var levels=a.earned.map(function(level){return achValue(level*a.scale,a.unit)});
+      row.appendChild(h("p","ap-ap","Пройденные уровни: "+levels.join(", ")));
+    }
+    var next=a.next===undefined?"Все уровни пройдены":"Следующий уровень: "+achValue(a.next*a.scale,a.unit);
+    row.appendChild(h("p","ap-ap",next));
+    box.appendChild(row);
+  });
+}
 
 /* --- start --- */
 Array.prototype.forEach.call(document.querySelectorAll(".ap-views button"),function(b){var on=b.dataset.view===VIEW;b.setAttribute("aria-checked",on);b.tabIndex=on?0:-1});
