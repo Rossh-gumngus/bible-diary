@@ -297,20 +297,14 @@ button:focus-visible,summary:focus-visible,[tabindex]:focus-visible{outline:2px 
 .cell.rd{background:var(--grad);border-color:transparent}
 .calh strong{font-family:var(--f-disp);font-weight:600;font-size:16px}
 .calh .btn{min-width:42px;font-size:18px;padding:4px 12px}
-.ap-hc{border-radius:3px;background:var(--rule2);opacity:1}
-.ap-hc.l1{background:var(--accent);opacity:.28}.ap-hc.l2{opacity:.5}.ap-hc.l3{opacity:.75}.ap-hc.l4{background:var(--grad);opacity:1}
-.ap-hc.ap-hsel{outline:2px solid var(--ink)}
-.ap-heatinfo{font-weight:600}
 .cal{gap:5px}
 .cal .wd{font-weight:700}
-.cday{border:1px solid var(--rule);border-radius:var(--r-sm);background:var(--solid);transition:transform var(--d1) var(--ease),border-color var(--d1)}
+.cday{border:1px solid var(--rule);border-radius:var(--r-sm);background:var(--solid)}
 .cday:hover{border-color:var(--accent)}
-.cday:active{transform:scale(.95)}
-.cday.has{border:1.5px solid var(--accent)}
-.cday.today .dn{font-weight:800;text-decoration-color:var(--accent)}
-.cday .cnt{background:var(--grad);color:#fff;font-weight:800}
-.cday.sel{background:var(--grad);border-color:transparent;color:#fff}
-.cday.sel .cnt{background:#fff;color:var(--g1)}
+.cal-level-1{background:color-mix(in srgb,var(--accent) 10%,var(--solid))}
+.cal-level-2{background:color-mix(in srgb,var(--accent) 20%,var(--solid))}
+.cal-level-3{background:color-mix(in srgb,var(--accent) 31%,var(--solid))}
+.cal-level-4{background:color-mix(in srgb,var(--accent) 44%,var(--solid))}
 .calh2{font-family:var(--f-disp);font-weight:600;font-size:15px}
 .sts dt{font-weight:600}.sts dd{font-weight:700}
 .chart .grid{stroke:var(--rule)}

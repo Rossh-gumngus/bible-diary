@@ -289,28 +289,6 @@ function tileDet(b,m){var rd=m[b.k]||{},n=Object.keys(rd).length,d=h("div","ap-t
   d.appendChild(h("p","hint",n?"Нажмите на отмеченную главу, чтобы открыть записи по ней.":"В этой книге пока нет прочитанных глав."));
   var cl=h("button","btn sm","Свернуть");cl.type="button";cl.onclick=function(){tileOpen="";renderTiles()};d.appendChild(cl);return d}
 
-/* --- heatmap --- */
-var heatY=+todayStr().slice(0,4);
-function heatLvl(n,mins){return !n?0:mins<10?1:mins<25?2:mins<45?3:4}
-$("heatPrev").onclick=function(){heatY--;renderHeat()};$("heatNext").onclick=function(){heatY++;renderHeat()};
-function renderHeat(){var bd=byDate(),cy=+todayStr().slice(0,4),ys=Object.keys(bd).map(function(d){return +d.slice(0,4)}),minY=Math.min.apply(null,ys.concat([cy]));
-  heatY=Math.max(minY,Math.min(cy,heatY));$("heatT").textContent=heatY+" год";$("heatPrev").disabled=heatY<=minY;$("heatNext").disabled=heatY>=cy;
-  var w=$("heat"),g=h("div","ap-heat"),y=heatY,f=dnum(y+"-01-01"),l=dnum(y+"-12-31"),s=f-wdOf(y+"-01-01"),td=todayStr(),tot=0,nd=0;w.innerHTML="";g.setAttribute("role","group");g.setAttribute("aria-label","Записи по дням за "+y+" год");
-  g.appendChild(h("span","ap-hm",""));["Пн","","Ср","","Пт","",""].forEach(function(x){g.appendChild(h("span","ap-hw",x))});
-  for(var ws=s;ws<=l;ws+=7){var lab="";for(var k=0;k<7;k++){var ds=dstr(ws+k);if(ds.slice(8)==="01"&&ws+k>=f&&ws+k<=l)lab=MS[+ds.slice(5,7)-1]}g.appendChild(h("span","ap-hm",lab));
-    for(k=0;k<7;k++){var dn=ws+k,ds2=dstr(dn),es=bd[ds2]||[],mins=Math.round(es.reduce(function(a,e){return a+secsOf(e)},0)/60),lv=heatLvl(es.length,mins);
-      if(dn<f||dn>l||ds2>td){var p=h("span","ap-hc ap-x0");p.setAttribute("aria-hidden","true");g.appendChild(p);continue}
-      if(es.length){nd++;tot+=mins}
-      var c=h("span","ap-hc"+(lv?" l"+lv:"")+(ds2===calSel?" ap-hsel":""));c.tabIndex=-1;var tip=fmtDay(ds2)+": "+(es.length?es.length+" зап."+(mins?", "+mins+" мин":""):"нет записей");c.setAttribute("data-tip",tip);c.setAttribute("aria-label",tip);c.dataset.d=ds2;g.appendChild(c)}}
-  g.addEventListener("click",function(ev){var c=ev.target.closest(".ap-hc");if(!c||!c.dataset.d)return;var ds=c.dataset.d;calSel=ds;calM=ds.slice(0,7);
-    Array.prototype.forEach.call(g.querySelectorAll(".ap-hsel"),function(x){x.classList.remove("ap-hsel")});c.classList.add("ap-hsel");$("heatInfo").textContent=c.getAttribute("data-tip")+". День выбран в календаре ниже.";renderCal()});
-  var first=g.querySelector(".ap-hc[data-d]");if(first)first.tabIndex=0;
-  g.addEventListener("keydown",function(ev){var c=ev.target.closest(".ap-hc");if(!c)return;var d={ArrowRight:7,ArrowLeft:-7,ArrowDown:1,ArrowUp:-1}[ev.key];
-    if(ev.key==="Enter"||ev.key===" "){ev.preventDefault();c.click();return}if(!d)return;ev.preventDefault();var n=g.querySelector('.ap-hc[data-d="'+dstr(dnum(c.dataset.d)+d)+'"]');if(n){c.tabIndex=-1;n.tabIndex=0;n.focus()}});
-  w.appendChild(g);$("heatInfo").textContent=nd?"За "+y+" год: дней с записями — "+nd+(tot?", минут — "+tot:"")+".":"За "+y+" год записей нет.";
-  var lg=$("heatLeg");lg.innerHTML="";lg.appendChild(h("span","","Меньше"));[0,1,2,3,4].forEach(function(i){var c=h("span","ap-hc"+(i?" l"+i:""));c.setAttribute("aria-hidden","true");lg.appendChild(c)});lg.appendChild(h("span","","Больше"));
-  if(heatY===cy)requestAnimationFrame(function(){w.scrollLeft=w.scrollWidth})}
-
 /* --- achievements --- */
 var ACH = [
   {id:"bible",title:"Библия целиком",unit:"times",levels:[1,2,3,5,10]},
@@ -383,7 +361,7 @@ function achStats(list,today){
 function achValue(value,unit){
   if(unit==="days")return value+" "+plur(value,"день","дня","дней");
   if(unit==="times")return value+" "+plur(value,"раз","раза","раз");
-  return (fmtSecs(value)+(value>=3600&&value%60?value%60+" сек":"")).trim()||"0 мин";
+  return readingTime(value);
 }
 function achList(stats){
   return ACH.map(function(a){

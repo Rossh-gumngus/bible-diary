@@ -94,17 +94,18 @@
     <div id="tiles"></div>
     </div>
     <div class="ap-sec">
-    <h2 class="ap-h2">Тепловая карта</h2>
-    <div class="calh"><button type="button" class="btn" id="heatPrev" aria-label="Предыдущий год">‹</button><strong id="heatT"></strong><button type="button" class="btn" id="heatNext" aria-label="Следующий год">›</button></div>
-    <div class="ap-heatw" id="heat"></div>
-    <div class="ap-heatleg" id="heatLeg"></div>
-    <p class="ap-heatinfo" id="heatInfo" aria-live="polite"></p>
-    </div>
-    <div class="ap-sec">
-    <h2 class="ap-h2">Календарь</h2>
-    <div class="calh"><button type="button" class="btn" id="calPrev" aria-label="Предыдущий месяц">‹</button><strong id="calT" aria-live="polite"></strong><button type="button" class="btn" id="calNext" aria-label="Следующий месяц">›</button></div>
-    <div class="cal" id="cal"></div>
-    <div id="calDay"></div>
+      <h2 class="ap-h2">Календарь чтения</h2>
+      <div class="calh"><button type="button" class="btn" id="calPrev" aria-label="Предыдущий месяц">‹</button><strong id="calT" aria-live="polite"></strong><button type="button" class="btn" id="calNext" aria-label="Следующий месяц">›</button></div>
+      <div class="cal" id="cal" role="group" aria-labelledby="calT"></div>
+      <ul class="cal-legend" aria-label="Время чтения">
+        <li><span class="cal-mark cal-untimed" aria-hidden="true"></span>Без времени</li>
+        <li><span class="cal-mark cal-level-1" aria-hidden="true"></span>До 10 мин</li>
+        <li><span class="cal-mark cal-level-2" aria-hidden="true"></span>10–24 мин</li>
+        <li><span class="cal-mark cal-level-3" aria-hidden="true"></span>25–44 мин</li>
+        <li><span class="cal-mark cal-level-4" aria-hidden="true"></span>От 45 мин</li>
+      </ul>
+      <p class="cal-month" id="calMonth"></p>
+      <div class="cal-detail" id="calDay" aria-live="polite"></div>
     </div>
     <div class="ap-sec">
     <h2 class="ap-h2" id="goalH">Цели</h2>

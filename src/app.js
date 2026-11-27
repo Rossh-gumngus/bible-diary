@@ -421,23 +421,104 @@ var MS=["янв","фев","мар","апр","май","июн","июл","авг",
 function readMap(list){var m={};readingEntries(list).forEach(function(e){refChapters(e.refs).forEach(function(r){var b=BK[r.b],c=+r.c;if(b&&c>=1&&c<=b.c){(m[r.b]=m[r.b]||{})[c]=1}})});return m}
 function cntRead(m,from,to){var n=0;B.slice(from,to).forEach(function(b){n+=Object.keys(m[b.k]||{}).length});return n}
 function chOf(e){if(isNote(e))return 0;var s={};refChapters(e.refs).forEach(function(r){if(BK[r.b])s[r.b+" "+(+r.c)]=1});return Object.keys(s).length}
-function renderProg(){renderStats();renderTiles();renderHeat();renderCal();renderGoal();renderAch()}
+function renderProg(){renderStats();renderTiles();renderCal();renderGoal();renderAch()}
 function pct(a,b){return num(Math.floor(a/b*1000)/10)+" %"}
 
 /* 4.2 calendar */
 function byDate(){var o={};readingEntries().forEach(function(e){(o[e.date]=o[e.date]||[]).push(e)});return o}
-$("calPrev").onclick=function(){var a=calM.split("-"),y=+a[0],m=+a[1]-1;if(m<1){m=12;y--}calM=y+"-"+pad(m);renderCal()};
-$("calNext").onclick=function(){var a=calM.split("-"),y=+a[0],m=+a[1]+1;if(m>12){m=1;y++}calM=y+"-"+pad(m);renderCal()};
-function renderCal(){var bd=byDate(),g=$("cal"),a=calM.split("-"),y=+a[0],mo=+a[1],first=calM+"-01",nd=new Date(y,mo,0).getDate(),off=wdOf(first),td=todayStr();
-  $("calT").textContent=monthName(calM);g.innerHTML="";WD.forEach(function(w){g.appendChild(h("span","wd",w))});
-  for(var i=0;i<off;i++)g.appendChild(h("span","pad"));
-  for(var d=1;d<=nd;d++){var ds=calM+"-"+pad(d),n=(bd[ds]||[]).length,b=h("button","cday"+(n?" has":"")+(ds===td?" today":"")+(ds===calSel?" sel":""));b.type="button";
-    b.appendChild(h("span","dn",d));if(n)b.appendChild(h("span","cnt",n));
-    b.setAttribute("aria-label",fmtDay(ds)+(n?", записей: "+n:", записей нет"));b.setAttribute("aria-pressed",ds===calSel);
-    b.onclick=(function(ds){return function(){calSel=calSel===ds?"":ds;renderCal()}})(ds);g.appendChild(b)}
-  var box=$("calDay");box.innerHTML="";if(!calSel)return;var es=(bd[calSel]||[]).slice().sort(function(a,b){return a.id<b.id?1:-1});
-  box.appendChild(h("div","calh2",fmtDay(calSel)));
-  if(!es.length)box.appendChild(h("div","empty","В этот день записей нет."));else es.forEach(function(e){box.appendChild(card(e))})}
+function calendarLevel(count,seconds){
+  if(!count)return "";
+  if(!seconds)return "cal-untimed";
+  return "cal-level-"+(seconds<600?1:seconds<1500?2:seconds<2700?3:4);
+}
+function calendarMonth(byDay,month){
+  var year=+month.slice(0,4),number=+month.slice(5),length=new Date(year,number,0).getDate();
+  var days=[],count=0,total=0;
+  for(var i=1;i<=length;i++){
+    var date=month+"-"+pad(i),records=byDay[date]||[];
+    var seconds=records.reduce(function(sum,entry){return sum+secsOf(entry)},0);
+    if(records.length)count++;
+    total+=seconds;
+    days.push({date:date,number:i,records:records,seconds:seconds});
+  }
+  return {days:days,count:count,total:total};
+}
+function moveCalendar(delta){
+  var first=new Date(dnum(calM+"-01")*864e5);
+  first.setUTCMonth(first.getUTCMonth()+delta);
+  calM=dstr(first.getTime()/864e5).slice(0,7);
+  renderCal();
+}
+$("calPrev").onclick=function(){moveCalendar(-1)};
+$("calNext").onclick=function(){moveCalendar(1)};
+function renderCal(restoreFocus){
+  var dates=byDate(),today=todayStr(),currentMonth=today.slice(0,7),maxMonth=currentMonth;
+  Object.keys(dates).forEach(function(date){if(date.slice(0,7)>maxMonth)maxMonth=date.slice(0,7)});
+  if(calM>maxMonth)calM=maxMonth;
+  var month=calendarMonth(dates,calM),grid=$("cal"),selected=month.days.find(function(day){return day.date===calSel});
+  if(!selected){
+    selected=calM===currentMonth?month.days[+today.slice(8)-1]:
+      month.days.slice().reverse().find(function(day){return day.records.length})||month.days[0];
+    calSel=selected.date;
+  }
+  say("calT",monthName(calM));
+  $("calNext").disabled=calM>=maxMonth;
+  say("calMonth",month.count?month.count+" "+plur(month.count,"день","дня","дней")+" чтения · "+
+    (month.total?readingTime(month.total):"время не указано"):"За этот месяц записей о чтении нет.");
+  var focusDay;
+  grid.replaceChildren();
+  WD.forEach(function(day){grid.appendChild(h("span","wd",day))});
+  for(var i=0;i<wdOf(calM+"-01");i++)grid.appendChild(h("span","pad"));
+  month.days.forEach(function(day){
+    var active=day===selected;
+    var button=h("button","cday "+calendarLevel(day.records.length,day.seconds)+(active?" sel":""),day.number);
+    button.type="button";
+    button.dataset.date=day.date;
+    button.tabIndex=active?0:-1;
+    button.setAttribute("aria-pressed",active);
+    button.setAttribute("aria-label",fmtDay(day.date)+", "+(day.records.length?
+      day.seconds?readingTime(day.seconds):"чтение без времени":"нет записей о чтении"));
+    if(day.date===today)button.setAttribute("aria-current","date");
+    button.onclick=function(){calSel=day.date;renderCal(true)};
+    if(active)focusDay=button;
+    grid.appendChild(button);
+  });
+  if(restoreFocus&&focusDay)focusDay.focus({preventScroll:true});
+  renderCalendarDay(selected);
+}
+$("cal").onkeydown=function(event){
+  var date=event.target.dataset.date;
+  var shift={ArrowLeft:-1,ArrowRight:1,ArrowUp:-7,ArrowDown:7}[event.key];
+  if(!date||!shift)return;
+  var next=dstr(dnum(date)+shift);
+  if(next.slice(0,7)!==calM)return;
+  event.preventDefault();
+  calSel=next;
+  renderCal(true);
+};
+function renderCalendarDay(day){
+  var box=$("calDay"),expanded=box.dataset.date===day.date&&!!box.querySelector("details[open]");
+  box.dataset.date=day.date;
+  box.replaceChildren(h("h3","calh2",fmtDay(day.date)));
+  if(!day.records.length){
+    box.appendChild(h("p","empty","В этот день записей о чтении нет."));
+    return;
+  }
+  box.appendChild(h("p","cal-day-time",day.seconds?"Время чтения — "+readingTime(day.seconds):"Время чтения не указано"));
+  var records=day.records.slice().sort(cmpDesc).reverse(),labels=new Set();
+  records.forEach(function(entry){(entry.refs||[]).forEach(function(ref){labels.add(refLabel(ref))})});
+  if(labels.size){
+    var refs=h("ul","cal-refs");
+    labels.forEach(function(label){refs.appendChild(h("li","",label))});
+    box.appendChild(refs);
+  }else box.appendChild(h("p","hint","Отрывки не указаны."));
+  var details=h("details","cal-records");
+  details.open=expanded;
+  var title=records.length===1?"Открыть запись":records.length+" "+plur(records.length,"запись","записи","записей")+" о чтении";
+  details.appendChild(h("summary","",title));
+  records.forEach(function(entry){details.appendChild(card(entry))});
+  box.appendChild(details);
+}
 
 /* 4.3 goals: две независимые цели — «Минуты в день» и «План чтения».
    goal = {minutes:{perDay,start}|null, plan:{id,start}|null} или null, если обе выключены */
@@ -573,18 +654,18 @@ function statsData(list,today){
   return {today:secondsToday,total:total,days:dates.size,average:dates.size?total/dates.size:0,
     streak:streak(dates,today),longest:longestStreak(dates,today)};
 }
+function readingTime(seconds){
+  seconds=Math.round(seconds);
+  return (fmtSecs(seconds)+(seconds>=3600&&seconds%60?seconds%60+" сек":"")).trim()||"0 мин";
+}
 function renderStats(){
   var data=statsData();
-  function time(seconds){
-    seconds=Math.round(seconds);
-    return (fmtSecs(seconds)+(seconds>=3600&&seconds%60?seconds%60+" сек":"")).trim()||"0 мин";
-  }
   say("statsDays",data.days);
   say("statsStreak",data.streak);
   say("statsLongest",data.longest+" "+plur(data.longest,"день","дня","дней"));
-  say("statsToday",time(data.today));
-  say("statsTotal",time(data.total));
-  say("statsAverage",time(data.average));
+  say("statsToday",readingTime(data.today));
+  say("statsTotal",readingTime(data.total));
+  say("statsAverage",readingTime(data.average));
 }
 
 /* goal card on «Читать» */
