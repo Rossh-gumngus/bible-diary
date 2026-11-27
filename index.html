@@ -888,6 +888,8 @@ button:focus-visible,summary:focus-visible,[tabindex]:focus-visible{outline:2px 
 .ap-tdet{border:1px solid var(--rule);background:var(--solid);border-radius:var(--r-md)}
 .cell{border-radius:4px;border-color:var(--rule2)}
 .cell.rd{background:var(--grad);border-color:transparent}
+.cell.part{border-color:var(--accent);background:linear-gradient(135deg,var(--accent) 50%,transparent 50%)}
+.ap-cycle{font-weight:700;margin:0 0 10px}
 .calh strong{font-family:var(--f-disp);font-weight:600;font-size:16px}
 .calh .btn{min-width:42px;font-size:18px;padding:4px 12px}
 .cal{gap:5px}
@@ -1126,7 +1128,7 @@ button:focus-visible,summary:focus-visible,[tabindex]:focus-visible{outline:2px 
     </div>
     <div class="ap-sec">
     <h2 class="ap-h2">Карта прочитанного</h2>
-    <p class="hint">Плитка — книга: чем темнее, тем больше глав прочитано. Нажмите на плитку, чтобы увидеть главы.</p>
+    <p class="hint">Карта показывает текущий круг чтения. Нажмите на книгу, чтобы увидеть целиком и частично прочитанные главы.</p>
     <div id="tiles"></div>
     </div>
     <div class="ap-sec">
@@ -2504,19 +2506,61 @@ window.addEventListener("scroll",tipHide,{passive:true});
 
 /* --- tiles --- */
 var tileOpen="";
-function renderTiles(){var box=$("tiles"),m=readMap();box.innerHTML="";
+function readingCycle(list){
+  var total=B.reduce(function(sum,book){return sum+book.v.reduce(function(n,verses){return n+verses},0)},0);
+  var number=1,remaining=total,chapters={};
+  readingEntries(list).sort(function(a,b){return cmpDesc(b,a)}).forEach(function(entry){
+    refChapters(entry.refs).forEach(function(ref){
+      var chapter=+ref.c,limit=maxV(ref.b,chapter);
+      if(!limit)return;
+      var book=chapters[ref.b]||(chapters[ref.b]={});
+      var seen=book[chapter]||(book[chapter]=new Set());
+      vsRanges(ref.b,chapter,ref.v).forEach(function(range){
+        if(!Number.isInteger(range[0])||!Number.isInteger(range[1]))return;
+        for(var verse=range[0];verse<=Math.min(range[1],limit);verse++){
+          if(!seen.has(verse)){seen.add(verse);remaining--}
+        }
+      });
+    });
+    if(remaining===0){number++;remaining=total;chapters={}}
+  });
+  var full={},partial={};
+  Object.keys(chapters).forEach(function(key){
+    Object.keys(chapters[key]).forEach(function(chapter){
+      var count=chapters[key][chapter].size;
+      if(!count)return;
+      var state=count===maxV(key,+chapter)?full:partial;
+      (state[key]||(state[key]={}))[chapter]=true;
+    });
+  });
+  return {number:number,full:full,partial:partial};
+}
+function renderTiles(){var box=$("tiles"),cycle=readingCycle(),m=cycle.full;box.innerHTML="";
+  box.appendChild(h("p","ap-cycle","Круг чтения № "+cycle.number));
   [["Əhdi-Ətiq",0,39,929],["Əhdi-Cədid",39,66,260]].forEach(function(t){var hd=h("div","ap-tsec");hd.appendChild(h("span","",t[0]));hd.appendChild(h("small","",cntRead(m,t[1],t[2])+" из "+t[3]+" глав"));box.appendChild(hd);
     var g=h("div","ap-tgrid"),dw=h("div");B.slice(t[1],t[2]).forEach(function(b){var n=Object.keys(m[b.k]||{}).length,p=n/b.c,op=n?.18+.82*p:0,tl=h("button","ap-tile"+(b.c>=40?" s3":b.c>=20?" s2":"")+(op>.55?" ap-dk":""));tl.type="button";
       var f=h("span","ap-tf");f.style.opacity=op;tl.appendChild(f);tl.appendChild(h("span","ap-tn",b.n));tl.appendChild(h("span","ap-tp",n+"/"+b.c));
-      var tip=b.n+": "+n+" из "+b.c+" "+plur(b.c,"главы","глав","глав");tl.setAttribute("data-tip",tip);tl.setAttribute("aria-label",tip);tl.setAttribute("aria-expanded",tileOpen===b.k);
+      var partial=Object.keys(cycle.partial[b.k]||{}).length;
+      var tip=b.n+": "+n+" из "+b.c+" глав целиком"+(partial?", частично: "+partial:"");
+      tl.setAttribute("data-tip",tip);tl.setAttribute("aria-label",tip);tl.setAttribute("aria-expanded",tileOpen===b.k);
       tl.onclick=function(){tileOpen=tileOpen===b.k?"":b.k;renderTiles();var nt=box.querySelector('.ap-tile[aria-expanded="true"]');if(nt)nt.focus({preventScroll:true})};g.appendChild(tl);
-      if(tileOpen===b.k)dw.appendChild(tileDet(b,m))});box.appendChild(g);box.appendChild(dw)})}
-function tileDet(b,m){var rd=m[b.k]||{},n=Object.keys(rd).length,d=h("div","ap-tdet"),hd=h("div","bkh");hd.appendChild(h("span","bn",b.n));hd.appendChild(h("small","","прочитано "+n+" из "+b.c));d.appendChild(hd);
-  var cs=h("div","cells");for(var c=1;c<=b.c;c++){var lab=b.n+" "+c,x;
-    if(rd[c]){x=h("button","cell rd");x.type="button";x.title=lab+": прочитано, показать записи";x.setAttribute("aria-label",x.title);x.onclick=(function(k,c){return function(){showPassage(k,c)}})(b.k,c)}
-    else{x=h("span","cell");x.title=lab+": не прочитано"}if(c%10===0)x.classList.add("t");cs.appendChild(x)}d.appendChild(cs);
-  d.appendChild(h("p","hint",n?"Нажмите на отмеченную главу, чтобы открыть записи по ней.":"В этой книге пока нет прочитанных глав."));
-  var cl=h("button","btn sm","Свернуть");cl.type="button";cl.onclick=function(){tileOpen="";renderTiles()};d.appendChild(cl);return d}
+      if(tileOpen===b.k)dw.appendChild(tileDet(b,m,cycle.partial))});box.appendChild(g);box.appendChild(dw)})}
+function tileDet(b,m,partial){
+  var rd=m[b.k]||{},part=partial[b.k]||{},n=Object.keys(rd).length,p=Object.keys(part).length,d=h("div","ap-tdet"),hd=h("div","bkh");
+  hd.appendChild(h("span","bn",b.n));hd.appendChild(h("small","",n+" из "+b.c+" глав целиком"+(p?" · частично: "+p:"")));d.appendChild(hd);
+  var cs=h("div","cells");
+  for(let c=1;c<=b.c;c++){
+    var lab=b.n+" "+c,x;
+    if(rd[c]||part[c]){
+      x=h("button","cell "+(rd[c]?"rd":"part"));x.type="button";
+      x.title=lab+(rd[c]?": прочитано целиком":": прочитано частично");x.setAttribute("aria-label",x.title+", показать записи");
+      x.onclick=function(){showPassage(b.k,c)};
+    }else{x=h("span","cell");x.title=lab+": не прочитано"}
+    if(c%10===0)x.classList.add("t");cs.appendChild(x);
+  }
+  d.appendChild(cs);
+  var cl=h("button","btn sm","Свернуть");cl.type="button";cl.onclick=function(){tileOpen="";renderTiles()};d.appendChild(cl);return d;
+}
 
 /* --- achievements --- */
 var ACH = [

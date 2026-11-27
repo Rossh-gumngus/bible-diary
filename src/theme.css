@@ -295,6 +295,8 @@ button:focus-visible,summary:focus-visible,[tabindex]:focus-visible{outline:2px 
 .ap-tdet{border:1px solid var(--rule);background:var(--solid);border-radius:var(--r-md)}
 .cell{border-radius:4px;border-color:var(--rule2)}
 .cell.rd{background:var(--grad);border-color:transparent}
+.cell.part{border-color:var(--accent);background:linear-gradient(135deg,var(--accent) 50%,transparent 50%)}
+.ap-cycle{font-weight:700;margin:0 0 10px}
 .calh strong{font-family:var(--f-disp);font-weight:600;font-size:16px}
 .calh .btn{min-width:42px;font-size:18px;padding:4px 12px}
 .cal{gap:5px}
